@@ -31,10 +31,10 @@ export function Card({ title, id, to }: CardProps) {
       to={to}
       className={`${getGradientFromId(
         id,
-      )} overflow-hidden duration-300 cursor-pointer w-[33.333%] h-[33vw] shrink-0 hover:brightness-110 hover:scale-[1.02]`}
+      )} overflow-hidden duration-300 cursor-pointer w-[25%] h-[25vw] shrink-0 hover:brightness-110 hover:scale-[1.02]`}
     >
       <div className="aspect-square relative">
-        <div className="h-full flex items-center text-4xl font-bold text-white p-4">
+        <div className="h-full flex items-center text-6xl font-bold text-white p-4">
           {title}
         </div>
       </div>

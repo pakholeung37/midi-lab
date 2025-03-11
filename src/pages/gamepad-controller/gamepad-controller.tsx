@@ -256,6 +256,11 @@ export function GamepadController() {
           )}
         </select>
       </div>
+      {!activeGamepad && (
+        <div className="text-center text-gray-500 text-xl mb-8">
+          No gamepad detected. Please connect a gamepad and press any button.
+        </div>
+      )}
 
       {curveEditors}
 
@@ -296,12 +301,6 @@ export function GamepadController() {
         {showTester ? 'Hide Tester' : 'Show Tester'}
       </button>
       {renderGamepadTester}
-
-      {!activeGamepad && (
-        <div className="text-center text-gray-500 text-xl">
-          No gamepad detected. Please connect a gamepad and press any button.
-        </div>
-      )}
     </div>
   )
 }
