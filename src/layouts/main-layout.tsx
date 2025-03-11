@@ -35,7 +35,7 @@ export function MainLayout() {
           </div>
           <nav className="space-x-6">
             <a
-              href="https://github.com/pakholeung37"
+              href="https://github.com/pakholeung37/midi-lab"
               className="text-gray-600 hover:text-gray-900"
             >
               github
