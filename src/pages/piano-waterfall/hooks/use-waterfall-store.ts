@@ -20,6 +20,10 @@ interface WaterfallState {
     isCountingDown: boolean // 是否正在倒数
     currentBeat: number // 当前倒数拍数 (4, 3, 2, 1)
   }
+  // 节拍器状态
+  metronome: {
+    enabled: boolean // 是否启用节拍器
+  }
   // 活动按键 (来自瀑布流 + 实时输入)
   activeKeys: Map<number, ActiveKey>
   // 当前可见的音符
@@ -54,6 +58,8 @@ interface WaterfallActions {
   startCountdown: () => void
   setCountdownBeat: (beat: number) => void
   stopCountdown: () => void
+  // 节拍器控制
+  toggleMetronome: () => void
   // 活动按键
   addActiveKey: (key: ActiveKey) => void
   removeActiveKey: (midi: number, source: 'waterfall' | 'input') => void
@@ -86,6 +92,9 @@ const initialState: WaterfallState = {
     enabled: true,
     isCountingDown: false,
     currentBeat: 0,
+  },
+  metronome: {
+    enabled: false,
   },
   activeKeys: new Map(),
   visibleNotes: [],
@@ -170,6 +179,11 @@ export const useWaterfallStore = create<WaterfallState & WaterfallActions>(
     stopCountdown: () =>
       set((state) => ({
         countdown: { ...state.countdown, isCountingDown: false, currentBeat: 0 },
+      })),
+
+    toggleMetronome: () =>
+      set((state) => ({
+        metronome: { ...state.metronome, enabled: !state.metronome.enabled },
       })),
 
     addActiveKey: (key) =>

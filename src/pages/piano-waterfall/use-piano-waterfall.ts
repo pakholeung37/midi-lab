@@ -27,6 +27,7 @@ export function usePianoWaterfall() {
     audio,
     activeKeys,
     countdown,
+    metronome,
     midiData: storeMidiData,
     timeWindow,
     lookAheadTime,
@@ -43,6 +44,7 @@ export function usePianoWaterfall() {
     startCountdown,
     setCountdownBeat,
     stopCountdown,
+    toggleMetronome,
     addActiveKey,
     removeActiveKey,
     clearActiveKeys,
@@ -53,6 +55,10 @@ export function usePianoWaterfall() {
 
   // 倒数计时器引用
   const countdownTimerRef = useRef<number | undefined>(undefined)
+  // 节拍器计时器引用
+  const metronomeTimerRef = useRef<number | undefined>(undefined)
+  // 上一次节拍时间
+  const lastBeatTimeRef = useRef<number>(0)
 
   // MIDI 输入监听
   const {
@@ -321,6 +327,42 @@ export function usePianoWaterfall() {
     stopAllNotes,
   ])
 
+  // 节拍器效果
+  useEffect(() => {
+    // 清理函数
+    const cleanup = () => {
+      if (metronomeTimerRef.current) {
+        clearInterval(metronomeTimerRef.current)
+        metronomeTimerRef.current = undefined
+      }
+    }
+
+    // 如果未启用节拍器或未在播放，清理并退出
+    if (!metronome.enabled || !playback.isPlaying) {
+      cleanup()
+      lastBeatTimeRef.current = 0
+      return cleanup
+    }
+
+    // 计算每拍间隔（毫秒）
+    const beatInterval = (60 / playback.bpm) * 1000
+
+    // 立即播放第一拍
+    playClick(true)
+    lastBeatTimeRef.current = Date.now()
+
+    // 设置定时器
+    let beatCount = 1
+    metronomeTimerRef.current = window.setInterval(() => {
+      // 每 4 拍重音
+      const isAccent = beatCount % 4 === 0
+      playClick(isAccent)
+      beatCount++
+    }, beatInterval)
+
+    return cleanup
+  }, [metronome.enabled, playback.isPlaying, playback.bpm, playClick])
+
   // 处理停止
   const handleStop = useCallback(() => {
     cancelCountdown()
@@ -357,6 +399,7 @@ export function usePianoWaterfall() {
     playback,
     activeKeys,
     countdown,
+    metronome,
     timeWindow,
     lookAheadTime,
     canvasSize,
@@ -377,6 +420,7 @@ export function usePianoWaterfall() {
     toggleMute,
     setVolume,
     toggleCountdown,
+    toggleMetronome,
     isFullscreen,
     toggleFullscreen,
   }

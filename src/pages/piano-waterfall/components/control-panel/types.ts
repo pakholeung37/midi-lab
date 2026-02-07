@@ -12,6 +12,9 @@ export interface ControlPanelProps {
     isCountingDown: boolean
     currentBeat: number
   }
+  metronome: {
+    enabled: boolean
+  }
   onPlay: () => void
   onPause: () => void
   onStop: () => void
@@ -19,6 +22,7 @@ export interface ControlPanelProps {
   onBpmChange: (bpm: number) => void
   onToggleHelp: () => void
   onToggleCountdown: () => void
+  onToggleMetronome: () => void
   showHelp: boolean
   isMuted: boolean
   volume: number

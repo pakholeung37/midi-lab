@@ -1,5 +1,5 @@
 import * as Popover from '@radix-ui/react-popover'
-import { MdSettings, MdTimer } from 'react-icons/md'
+import { MdSettings, MdTimer, MdMusicNote } from 'react-icons/md'
 import { Button } from './button'
 import { PlayControls } from './play-controls'
 import { ProgressBar } from './progress-bar'
@@ -15,6 +15,7 @@ export function ControlPanel({
   originalBpm,
   tracks,
   countdown,
+  metronome,
   onPlay,
   onPause,
   onStop,
@@ -22,6 +23,7 @@ export function ControlPanel({
   onBpmChange,
   onToggleHelp,
   onToggleCountdown,
+  onToggleMetronome,
   showHelp,
   isMuted,
   volume,
@@ -35,15 +37,6 @@ export function ControlPanel({
   return (
     <div className="fixed top-3 left-1/2 -translate-x-1/2 z-50">
       <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-900/90 backdrop-blur-md border border-slate-700/50 shadow-xl">
-        {/* 倒数开关 */}
-        <Button
-          size="sm"
-          variant={countdown.enabled ? 'primary' : 'ghost'}
-          icon={<MdTimer className="w-4 h-4" />}
-          onClick={onToggleCountdown}
-          title={countdown.enabled ? '倒数已启用' : '倒数已禁用'}
-        />
-
         {/* 播放控制 */}
         <PlayControls
           isPlaying={isPlaying}
@@ -69,6 +62,23 @@ export function ControlPanel({
           bpm={bpm}
           originalBpm={originalBpm}
           onBpmChange={onBpmChange}
+        />
+        {/* 倒数开关 */}
+        <Button
+          size="sm"
+          variant={countdown.enabled ? 'primary' : 'ghost'}
+          icon={<MdTimer className="w-4 h-4" />}
+          onClick={onToggleCountdown}
+          title={countdown.enabled ? '倒数已启用' : '倒数已禁用'}
+        />
+
+        {/* 节拍器开关 */}
+        <Button
+          size="sm"
+          variant={metronome.enabled ? 'primary' : 'ghost'}
+          icon={<MdMusicNote className="w-4 h-4" />}
+          onClick={onToggleMetronome}
+          title={metronome.enabled ? '节拍器已启用' : '节拍器已禁用'}
         />
 
         {/* 设置按钮 - Radix Popover */}

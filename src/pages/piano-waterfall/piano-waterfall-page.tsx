@@ -15,6 +15,7 @@ export function PianoWaterfallPage() {
     playback,
     activeKeys,
     countdown,
+    metronome,
     isLoading,
     error,
     showHelp,
@@ -30,6 +31,7 @@ export function PianoWaterfallPage() {
     toggleMute,
     setVolume,
     toggleCountdown,
+    toggleMetronome,
     isFullscreen,
     toggleFullscreen,
     loadDefaultMidi,
@@ -114,6 +116,7 @@ export function PianoWaterfallPage() {
         originalBpm={playback.originalBpm}
         tracks={midiData?.tracks || []}
         countdown={countdown}
+        metronome={metronome}
         onPlay={play}
         onPause={pause}
         onStop={handleStop}
@@ -121,6 +124,7 @@ export function PianoWaterfallPage() {
         onBpmChange={setBpm}
         onToggleHelp={toggleHelp}
         onToggleCountdown={toggleCountdown}
+        onToggleMetronome={toggleMetronome}
         showHelp={showHelp}
         isMuted={isMuted}
         volume={volume}
