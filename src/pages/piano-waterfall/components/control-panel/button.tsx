@@ -30,7 +30,9 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     // 尺寸样式
     const sizeStyles = {
       sm: children ? 'h-7 px-2 rounded-md text-xs gap-1' : 'w-7 h-7 rounded-md',
-      md: children ? 'h-8 px-2.5 rounded-lg text-sm gap-1.5' : 'w-8 h-8 rounded-lg',
+      md: children
+        ? 'h-8 px-2.5 rounded-lg text-sm gap-1.5'
+        : 'w-8 h-8 rounded-lg',
       lg: 'h-9 px-3 rounded-lg text-xs gap-1.5',
     }
 
@@ -57,9 +59,13 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
 
     return (
       <button ref={ref} className={finalClassName} {...props}>
-        {icon && iconPosition === 'left' && <span className="flex-shrink-0">{icon}</span>}
+        {icon && iconPosition === 'left' && (
+          <span className="flex-shrink-0">{icon}</span>
+        )}
         {children && <span className="truncate">{children}</span>}
-        {icon && iconPosition === 'right' && <span className="flex-shrink-0">{icon}</span>}
+        {icon && iconPosition === 'right' && (
+          <span className="flex-shrink-0">{icon}</span>
+        )}
       </button>
     )
   },

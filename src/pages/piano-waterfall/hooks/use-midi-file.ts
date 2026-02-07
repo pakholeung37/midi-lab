@@ -2,6 +2,7 @@ import { useCallback, useState } from 'react'
 import * as ToneMidi from '@tonejs/midi'
 import type { MidiFileData, TrackInfo, WaterfallNote } from '../types'
 import { getTrackColor } from '../utils/note-colors'
+import { NoteTimeIndex } from '../core/note-index'
 
 export interface UseMidiFileReturn {
   midiData: MidiFileData | null
@@ -71,9 +72,12 @@ export function useMidiFile(): UseMidiFileReturn {
       // 提取原始 BPM (从第一个包含 tempo 事件的 track)
       let originalBpm = 120 // 默认 MIDI 标准速度
       const tempoEvent = midi.header.tempos?.[0]
-      if (tempoEvent && tempoEvent.bpm) {
+      if (tempoEvent?.bpm) {
         originalBpm = Math.round(tempoEvent.bpm)
       }
+
+      // 构建音符时间索引
+      const noteIndex = new NoteTimeIndex(notes)
 
       setMidiData({
         notes,
@@ -81,6 +85,7 @@ export function useMidiFile(): UseMidiFileReturn {
         duration,
         name: file.name.replace(/\.midi?$/i, ''),
         originalBpm,
+        noteIndex,
       })
     } catch (err) {
       console.error('Failed to parse MIDI file:', err)

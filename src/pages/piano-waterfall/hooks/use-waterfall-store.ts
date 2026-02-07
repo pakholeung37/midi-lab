@@ -1,17 +1,15 @@
 import { create } from 'zustand'
-import type {
-  ActiveKey,
-  AudioState,
-  MidiFileData,
-  PlaybackState,
-  WaterfallNote,
-} from '../types'
+import type { AudioState, MidiFileData } from '../types'
 
 interface WaterfallState {
-  // MIDI 文件数据
+  // MIDI 文件数据（带索引）
   midiData: MidiFileData | null
-  // 播放状态
-  playback: PlaybackState
+  // 播放控制状态（UI 用）
+  playback: {
+    isPlaying: boolean
+    bpm: number
+    originalBpm: number
+  }
   // 音频状态
   audio: AudioState
   // 节拍器音量（独立于 MIDI 音量）
@@ -26,10 +24,6 @@ interface WaterfallState {
   metronome: {
     enabled: boolean // 是否启用节拍器
   }
-  // 活动按键 (来自瀑布流 + 实时输入)
-  activeKeys: Map<number, ActiveKey>
-  // 当前可见的音符
-  visibleNotes: WaterfallNote[]
   // 画布尺寸
   canvasSize: { width: number; height: number }
   // 时间窗口 (秒) - 显示未来多少秒的音符
@@ -47,8 +41,7 @@ interface WaterfallActions {
   play: () => void
   pause: () => void
   togglePlay: () => void
-  // 时间控制
-  setCurrentTime: (time: number) => void
+  // 时间控制（兼容接口，实际使用 playbackState）
   seek: (time: number) => void
   // BPM 控制
   setBpm: (bpm: number) => void
@@ -63,12 +56,6 @@ interface WaterfallActions {
   stopCountdown: () => void
   // 节拍器控制
   toggleMetronome: () => void
-  // 活动按键
-  addActiveKey: (key: ActiveKey) => void
-  removeActiveKey: (midi: number, source: 'waterfall' | 'input') => void
-  clearActiveKeys: () => void
-  // 可见音符
-  setVisibleNotes: (notes: WaterfallNote[]) => void
   // 画布尺寸
   setCanvasSize: (width: number, height: number) => void
   // 时间窗口
@@ -83,7 +70,6 @@ const initialState: WaterfallState = {
   midiData: null,
   playback: {
     isPlaying: false,
-    currentTime: 0,
     bpm: 120,
     originalBpm: 120,
   },
@@ -100,8 +86,6 @@ const initialState: WaterfallState = {
   metronome: {
     enabled: false,
   },
-  activeKeys: new Map(),
-  visibleNotes: [],
   canvasSize: { width: 0, height: 0 },
   timeWindow: 4, // 默认显示未来 4 秒的音符
   lookAheadTime: 2, // 默认提前 2 秒显示
@@ -116,8 +100,6 @@ export const useWaterfallStore = create<WaterfallState & WaterfallActions>(
       set({
         midiData: data,
         playback: { ...initialState.playback },
-        activeKeys: new Map(),
-        visibleNotes: [],
       }),
 
     play: () =>
@@ -137,15 +119,10 @@ export const useWaterfallStore = create<WaterfallState & WaterfallActions>(
       }))
     },
 
-    setCurrentTime: (time) =>
-      set((state) => ({
-        playback: { ...state.playback, currentTime: Math.max(0, time) },
-      })),
-
-    seek: (time) =>
-      set((state) => ({
-        playback: { ...state.playback, currentTime: Math.max(0, time) },
-      })),
+    seek: (_time: number) => {
+      // seek 已迁移到 playbackState，此方法保留用于兼容
+      // 外部应调用 playbackState.setCurrentTime(time)
+    },
 
     setBpm: (bpm) =>
       set((state) => ({
@@ -185,34 +162,17 @@ export const useWaterfallStore = create<WaterfallState & WaterfallActions>(
 
     stopCountdown: () =>
       set((state) => ({
-        countdown: { ...state.countdown, isCountingDown: false, currentBeat: 0 },
+        countdown: {
+          ...state.countdown,
+          isCountingDown: false,
+          currentBeat: 0,
+        },
       })),
 
     toggleMetronome: () =>
       set((state) => ({
         metronome: { ...state.metronome, enabled: !state.metronome.enabled },
       })),
-
-    addActiveKey: (key) =>
-      set((state) => {
-        const newMap = new Map(state.activeKeys)
-        newMap.set(key.midi, key)
-        return { activeKeys: newMap }
-      }),
-
-    removeActiveKey: (midi, source) =>
-      set((state) => {
-        const newMap = new Map(state.activeKeys)
-        const existing = newMap.get(midi)
-        if (existing && existing.source === source) {
-          newMap.delete(midi)
-        }
-        return { activeKeys: newMap }
-      }),
-
-    clearActiveKeys: () => set({ activeKeys: new Map() }),
-
-    setVisibleNotes: (notes) => set({ visibleNotes: notes }),
 
     setCanvasSize: (width, height) => set({ canvasSize: { width, height } }),
 

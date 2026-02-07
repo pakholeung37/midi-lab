@@ -1,5 +1,5 @@
 import { useEffect, useRef, useCallback, useState } from 'react'
-import { useWaterfallStore } from './use-waterfall-store'
+import { playbackState } from '../core/playback-state'
 
 export interface UseMidiInputReturn {
   isSupported: boolean
@@ -16,36 +16,28 @@ export function useMidiInput(): UseMidiInputReturn {
   const [isSupported, setIsSupported] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  const { addActiveKey, removeActiveKey } = useWaterfallStore()
-
   // 处理 MIDI 消息
-  const handleMidiMessage = useCallback(
-    (event: MIDIMessageEvent) => {
-      const data = event.data
-      if (!data || data.length < 3) return
+  const handleMidiMessage = useCallback((event: MIDIMessageEvent) => {
+    const data = event.data
+    if (!data || data.length < 3) return
 
-      const [status, note, velocity] = data
-      const messageType = status & 0xf0
+    const [status, note, velocity] = data
+    const messageType = status & 0xf0
 
-      // Note On (0x90) with velocity > 0
-      if (messageType === 0x90 && velocity > 0) {
-        addActiveKey({
-          midi: note,
-          velocity: velocity / 127,
-          source: 'input',
-          color: '#06FFA5', // 青色 - 区分实时输入
-        })
-      }
-      // Note Off (0x80) or Note On with velocity 0
-      else if (
-        messageType === 0x80 ||
-        (messageType === 0x90 && velocity === 0)
-      ) {
-        removeActiveKey(note, 'input')
-      }
-    },
-    [addActiveKey, removeActiveKey],
-  )
+    // Note On (0x90) with velocity > 0
+    if (messageType === 0x90 && velocity > 0) {
+      playbackState.addActiveKey({
+        midi: note,
+        velocity: velocity / 127,
+        source: 'input',
+        color: '#06FFA5', // 青色 - 区分实时输入
+      })
+    }
+    // Note Off (0x80) or Note On with velocity 0
+    else if (messageType === 0x80 || (messageType === 0x90 && velocity === 0)) {
+      playbackState.removeActiveKey(note, 'input')
+    }
+  }, [])
 
   // 设置输入监听
   const setupInputs = useCallback(
@@ -91,9 +83,15 @@ export function useMidiInput(): UseMidiInputReturn {
         if (!port || port.type !== 'input') return
 
         if (port.state === 'connected') {
-          port.addEventListener('midimessage', handleMidiMessage as EventListener)
+          port.addEventListener(
+            'midimessage',
+            handleMidiMessage as EventListener,
+          )
         } else {
-          port.removeEventListener('midimessage', handleMidiMessage as EventListener)
+          port.removeEventListener(
+            'midimessage',
+            handleMidiMessage as EventListener,
+          )
         }
       })
 

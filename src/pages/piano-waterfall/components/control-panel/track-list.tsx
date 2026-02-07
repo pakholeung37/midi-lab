@@ -16,7 +16,9 @@ export function TrackList({ tracks }: TrackListProps) {
                 style={{ backgroundColor: track.color }}
               />
               <span className="text-slate-400 truncate">{track.name}</span>
-              <span className="text-slate-600 text-[10px]">({track.noteCount})</span>
+              <span className="text-slate-600 text-[10px]">
+                ({track.noteCount})
+              </span>
             </div>
           ))}
         </div>

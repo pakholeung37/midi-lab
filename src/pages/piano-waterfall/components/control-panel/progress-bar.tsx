@@ -1,6 +1,10 @@
 import type { ProgressBarProps } from './types'
 
-export function ProgressBar({ currentTime, duration, onSeek }: ProgressBarProps) {
+export function ProgressBar({
+  currentTime,
+  duration,
+  onSeek,
+}: ProgressBarProps) {
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60)
     const secs = Math.floor(seconds % 60)

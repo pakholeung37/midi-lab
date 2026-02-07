@@ -46,4 +46,5 @@ export interface MidiFileData {
   duration: number // 总时长（秒）
   name: string
   originalBpm: number // 原始 BPM
+  noteIndex?: import('./core/note-index').NoteTimeIndex // 时间索引（可选）
 }
