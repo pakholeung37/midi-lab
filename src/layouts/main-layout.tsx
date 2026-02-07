@@ -8,13 +8,17 @@ export function MainLayout() {
   // @ts-expect-error expect
   const secTitle = matches[matches.length - 1].staticData?.title
   const title = secTitle ? `MIDI Lab ｜ ${secTitle}` : 'MIDI Lab'
-
+  // @ts-expect-error expect
+  const noLayout = matches[matches.length - 1].staticData?.noLayout
   console.log('match', matches)
   // Update document title
   useEffect(() => {
     document.title = title
   }, [title])
 
+  if (noLayout) {
+    return <Outlet />
+  }
   return (
     <div className="min-h-screen bg-white">
       {/* Header */}

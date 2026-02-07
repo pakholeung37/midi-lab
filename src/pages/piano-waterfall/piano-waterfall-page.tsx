@@ -4,7 +4,6 @@ import { PianoKeyboard } from './components/piano-keyboard'
 import { WaterfallCanvas } from './components/waterfall-canvas'
 import { ControlPanel } from './components/control-panel'
 import { usePianoWaterfall } from './use-piano-waterfall'
-import './styles.css'
 
 // 像素/秒 的速度
 const PIXELS_PER_SECOND = 150
@@ -35,6 +34,7 @@ export function PianoWaterfallPage() {
     setVolume,
     isFullscreen,
     toggleFullscreen,
+    loadDefaultMidi,
   } = usePianoWaterfall()
 
   // 键盘快捷键
@@ -93,37 +93,38 @@ export function PianoWaterfallPage() {
 
   return (
     <div className="flex flex-col h-screen w-screen bg-slate-950 overflow-hidden">
-      {/* 顶部控制栏 */}
-      <div className="flex-shrink-0 p-4 bg-slate-900/80 backdrop-blur-sm border-b border-slate-800">
-        <ControlPanel
-          isPlaying={playback.isPlaying}
-          currentTime={playback.currentTime}
-          duration={midiData?.duration || 0}
-          bpm={playback.bpm}
-          originalBpm={playback.originalBpm}
-          tracks={midiData?.tracks || []}
-          onPlay={play}
-          onPause={pause}
-          onStop={handleStop}
-          onSeek={seek}
-          onBpmChange={setBpm}
-          onToggleHelp={toggleHelp}
-          showHelp={showHelp}
-          isMuted={isMuted}
-          volume={volume}
-          onToggleMute={toggleMute}
-          onVolumeChange={setVolume}
-          isFullscreen={isFullscreen}
-          onToggleFullscreen={toggleFullscreen}
-        />
+      {/* 悬浮控制栏 - 最小 UI */}
+      <ControlPanel
+        isPlaying={playback.isPlaying}
+        currentTime={playback.currentTime}
+        duration={midiData?.duration || 0}
+        bpm={playback.bpm}
+        originalBpm={playback.originalBpm}
+        tracks={midiData?.tracks || []}
+        onPlay={play}
+        onPause={pause}
+        onStop={handleStop}
+        onSeek={seek}
+        onBpmChange={setBpm}
+        onToggleHelp={toggleHelp}
+        showHelp={showHelp}
+        isMuted={isMuted}
+        volume={volume}
+        onToggleMute={toggleMute}
+        onVolumeChange={setVolume}
+        isFullscreen={isFullscreen}
+        onToggleFullscreen={toggleFullscreen}
+        onFileSelect={handleFileSelect}
+        onLoadDefaultMidi={loadDefaultMidi}
+        hasMidiData={!!midiData}
+      />
 
-        {/* 错误提示 */}
-        {error && (
-          <div className="mt-3 p-3 rounded-lg bg-red-500/20 text-red-400 text-sm">
-            {error}
-          </div>
-        )}
-      </div>
+      {/* 错误提示 */}
+      {error && (
+        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-lg bg-red-500/20 text-red-400 text-sm border border-red-500/30">
+          {error}
+        </div>
+      )}
 
       {/* 主画布区域 */}
       <div
@@ -186,22 +187,22 @@ export function PianoWaterfallPage() {
           </div>
         )}
 
-        {/* 帮助提示 */}
+        {/* 帮助提示 - 悬浮样式 */}
         {showHelp && (
-          <div className="absolute top-4 left-4 p-4 rounded-xl bg-slate-900/90 backdrop-blur-sm border border-slate-700 text-sm text-slate-300 max-w-xs z-30">
-            <h4 className="font-medium text-slate-100 mb-2">快捷键</h4>
-            <ul className="space-y-1 text-xs">
-              <li className="flex justify-between">
-                <span>空格</span>
+          <div className="fixed top-20 left-4 p-4 rounded-2xl bg-slate-900/95 backdrop-blur-md border border-slate-700/50 text-sm text-slate-300 max-w-xs z-40 shadow-2xl">
+            <h4 className="font-medium text-slate-100 mb-3">快捷键</h4>
+            <ul className="space-y-2 text-xs">
+              <li className="flex items-center justify-between">
+                <span className="px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 font-mono">Space</span>
                 <span className="text-slate-500">播放/暂停</span>
               </li>
-              <li className="flex justify-between">
-                <span>← / →</span>
+              <li className="flex items-center justify-between">
+                <span className="px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 font-mono">← →</span>
                 <span className="text-slate-500">前进/后退 5s</span>
               </li>
-              <li className="flex justify-between">
-                <span>↑ / ↓</span>
-                <span className="text-slate-500">调整BPM</span>
+              <li className="flex items-center justify-between">
+                <span className="px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 font-mono">↑ ↓</span>
+                <span className="text-slate-500">调整 BPM</span>
               </li>
             </ul>
           </div>

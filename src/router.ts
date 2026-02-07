@@ -39,6 +39,7 @@ export const pianoWaterfallRoute = createRoute({
   component: PianoWaterfallPage,
   staticData: {
     title: 'Piano Waterfall',
+    noLayout: true, // 这个页面不使用 MainLayout 的布局
   },
 })
 

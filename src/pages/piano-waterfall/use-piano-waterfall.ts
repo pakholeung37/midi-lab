@@ -9,6 +9,9 @@ import type { PianoKeyLayout } from './utils/piano-layout'
 // 像素/秒 的速度
 const PIXELS_PER_SECOND = 150
 
+// 默认 MIDI 文件路径
+const DEFAULT_MIDI_FILE = '/One_Summers_Day_Spirited_Away__Joe_Hisaishi.mid'
+
 export function usePianoWaterfall() {
   const containerRef = useRef<HTMLDivElement>(null)
   const animationRef = useRef<number | undefined>(undefined)
@@ -85,6 +88,19 @@ export function usePianoWaterfall() {
     },
     [parseMidiFile],
   )
+
+  // 加载默认 MIDI 文件
+  const loadDefaultMidi = useCallback(async () => {
+    try {
+      const response = await fetch(DEFAULT_MIDI_FILE)
+      if (!response.ok) throw new Error('Failed to load default MIDI')
+      const blob = await response.blob()
+      const file = new File([blob], 'default.mid', { type: 'audio/midi' })
+      await parseMidiFile(file)
+    } catch (err) {
+      console.error('Failed to load default MIDI:', err)
+    }
+  }, [parseMidiFile])
 
   // 计算钢琴布局
   useEffect(() => {
@@ -258,6 +274,7 @@ export function usePianoWaterfall() {
     handleFileSelect,
     handleStop,
     toggleHelp,
+    loadDefaultMidi,
     play,
     pause,
     seek,

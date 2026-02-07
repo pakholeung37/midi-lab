@@ -11,7 +11,7 @@ export interface UseMidiInputReturn {
 
 export function useMidiInput(): UseMidiInputReturn {
   const isListeningRef = useRef(false)
-  const accessRef = useRef<WebMidi.MIDIAccess | null>(null)
+  const accessRef = useRef<MIDIAccess | null>(null)
   const [isListening, setIsListening] = useState(false)
   const [isSupported, setIsSupported] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -20,8 +20,11 @@ export function useMidiInput(): UseMidiInputReturn {
 
   // 处理 MIDI 消息
   const handleMidiMessage = useCallback(
-    (event: WebMidi.MIDIMessageEvent) => {
-      const [status, note, velocity] = event.data
+    (event: MIDIMessageEvent) => {
+      const data = event.data
+      if (!data || data.length < 3) return
+
+      const [status, note, velocity] = data
       const messageType = status & 0xf0
 
       // Note On (0x90) with velocity > 0
@@ -46,7 +49,7 @@ export function useMidiInput(): UseMidiInputReturn {
 
   // 设置输入监听
   const setupInputs = useCallback(
-    (access: WebMidi.MIDIAccess) => {
+    (access: MIDIAccess) => {
       const inputs = access.inputs.values()
       for (const input of inputs) {
         input.addEventListener('midimessage', handleMidiMessage)
@@ -57,7 +60,7 @@ export function useMidiInput(): UseMidiInputReturn {
 
   // 清理输入监听
   const cleanupInputs = useCallback(
-    (access: WebMidi.MIDIAccess) => {
+    (access: MIDIAccess) => {
       const inputs = access.inputs.values()
       for (const input of inputs) {
         input.removeEventListener('midimessage', handleMidiMessage)
@@ -84,12 +87,13 @@ export function useMidiInput(): UseMidiInputReturn {
 
       // 监听设备连接/断开
       access.addEventListener('statechange', (e) => {
-        if (e.port.type === 'input') {
-          if (e.port.state === 'connected') {
-            e.port.addEventListener('midimessage', handleMidiMessage)
-          } else {
-            e.port.removeEventListener('midimessage', handleMidiMessage)
-          }
+        const port = e.port
+        if (!port || port.type !== 'input') return
+
+        if (port.state === 'connected') {
+          port.addEventListener('midimessage', handleMidiMessage as EventListener)
+        } else {
+          port.removeEventListener('midimessage', handleMidiMessage as EventListener)
         }
       })
 
