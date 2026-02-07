@@ -191,10 +191,10 @@ export const calcBezier = (
   const p3 = value[3]
 
   const y =
-    Math.pow(1 - t, 3) * p0.y +
-    3 * Math.pow(1 - t, 2) * t * p1.y +
-    3 * (1 - t) * Math.pow(t, 2) * p2.y +
-    Math.pow(t, 3) * p3.y
+    (1 - t) ** 3 * p0.y +
+    3 * (1 - t) ** 2 * t * p1.y +
+    3 * (1 - t) * t ** 2 * p2.y +
+    t ** 3 * p3.y
 
   return 1 - y / height
 }
