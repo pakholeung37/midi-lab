@@ -25,6 +25,7 @@ export function usePianoWaterfall() {
   const {
     playback,
     audio,
+    metronomeVolume,
     activeKeys,
     countdown,
     metronome,
@@ -40,6 +41,7 @@ export function usePianoWaterfall() {
     setBpm,
     toggleMute,
     setVolume,
+    setMetronomeVolume: setMetronomeVolumeStore,
     toggleCountdown,
     startCountdown,
     setCountdownBeat,
@@ -76,7 +78,8 @@ export function usePianoWaterfall() {
     stopNote,
     stopAllNotes,
     playClick,
-    setVolume: setAudioVolume,
+    setMidiVolume,
+    setMetronomeVolume,
   } = useAudio()
 
   // 当解析完成时更新 store
@@ -97,10 +100,15 @@ export function usePianoWaterfall() {
     }
   }, [midiData, playback.originalBpm])
 
-  // 同步音频音量
+  // 同步 MIDI 音量
   useEffect(() => {
-    setAudioVolume(audio.volume)
-  }, [audio.volume, setAudioVolume])
+    setMidiVolume(audio.volume)
+  }, [audio.volume, setMidiVolume])
+
+  // 同步节拍器音量
+  useEffect(() => {
+    setMetronomeVolume(metronomeVolume)
+  }, [metronomeVolume, setMetronomeVolume])
 
   // 处理文件选择
   const handleFileSelect = useCallback(
@@ -416,9 +424,11 @@ export function usePianoWaterfall() {
     setBpm,
     waterfallHeight,
     isMuted: audio.isMuted,
-    volume: audio.volume,
+    midiVolume: audio.volume,
+    metronomeVolume,
     toggleMute,
-    setVolume,
+    setMidiVolume: setVolume,
+    setMetronomeVolume: setMetronomeVolumeStore,
     toggleCountdown,
     toggleMetronome,
     isFullscreen,

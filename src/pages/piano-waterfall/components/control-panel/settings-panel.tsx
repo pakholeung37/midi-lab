@@ -12,9 +12,11 @@ import { TrackList } from './track-list'
 import type { SettingsPanelProps } from './types'
 
 export function SettingsPanelContent({
-  volume,
+  midiVolume,
+  metronomeVolume,
   isMuted,
-  onVolumeChange,
+  onMidiVolumeChange,
+  onMetronomeVolumeChange,
   onToggleMute,
   showHelp,
   onToggleHelp,
@@ -67,12 +69,20 @@ export function SettingsPanelContent({
         />
       </div>
 
-      {/* 音量控制 */}
+      {/* MIDI 音量控制 */}
       <VolumeControl
-        volume={volume}
+        label="MIDI 音量"
+        volume={midiVolume}
         isMuted={isMuted}
-        onVolumeChange={onVolumeChange}
+        onVolumeChange={onMidiVolumeChange}
         onToggleMute={onToggleMute}
+      />
+
+      {/* 节拍器音量控制 */}
+      <VolumeControl
+        label="节拍器音量"
+        volume={metronomeVolume}
+        onVolumeChange={onMetronomeVolumeChange}
       />
 
       {/* 帮助按钮 */}

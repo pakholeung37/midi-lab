@@ -26,9 +26,11 @@ export function ControlPanel({
   onToggleMetronome,
   showHelp,
   isMuted,
-  volume,
+  midiVolume,
+  metronomeVolume,
   onToggleMute,
-  onVolumeChange,
+  onMidiVolumeChange,
+  onMetronomeVolumeChange,
   isFullscreen,
   onToggleFullscreen,
   onFileSelect,
@@ -99,9 +101,11 @@ export function ControlPanel({
               align="end"
             >
               <SettingsPanelContent
-                volume={volume}
+                midiVolume={midiVolume}
+                metronomeVolume={metronomeVolume}
                 isMuted={isMuted}
-                onVolumeChange={onVolumeChange}
+                onMidiVolumeChange={onMidiVolumeChange}
+                onMetronomeVolumeChange={onMetronomeVolumeChange}
                 onToggleMute={onToggleMute}
                 showHelp={showHelp}
                 onToggleHelp={onToggleHelp}

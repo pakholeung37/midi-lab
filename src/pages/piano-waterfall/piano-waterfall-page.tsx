@@ -27,9 +27,11 @@ export function PianoWaterfallPage() {
     seek,
     setBpm,
     isMuted,
-    volume,
+    midiVolume,
+    metronomeVolume,
     toggleMute,
-    setVolume,
+    setMidiVolume,
+    setMetronomeVolume,
     toggleCountdown,
     toggleMetronome,
     isFullscreen,
@@ -127,9 +129,11 @@ export function PianoWaterfallPage() {
         onToggleMetronome={toggleMetronome}
         showHelp={showHelp}
         isMuted={isMuted}
-        volume={volume}
+        midiVolume={midiVolume}
+        metronomeVolume={metronomeVolume}
         onToggleMute={toggleMute}
-        onVolumeChange={setVolume}
+        onMidiVolumeChange={setMidiVolume}
+        onMetronomeVolumeChange={setMetronomeVolume}
         isFullscreen={isFullscreen}
         onToggleFullscreen={toggleFullscreen}
         onFileSelect={handleFileSelect}

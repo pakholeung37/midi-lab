@@ -14,6 +14,8 @@ interface WaterfallState {
   playback: PlaybackState
   // 音频状态
   audio: AudioState
+  // 节拍器音量（独立于 MIDI 音量）
+  metronomeVolume: number
   // 倒数状态
   countdown: {
     enabled: boolean // 是否启用倒数
@@ -53,6 +55,7 @@ interface WaterfallActions {
   // 音频控制
   toggleMute: () => void
   setVolume: (volume: number) => void
+  setMetronomeVolume: (volume: number) => void
   // 倒数控制
   toggleCountdown: () => void
   startCountdown: () => void
@@ -88,6 +91,7 @@ const initialState: WaterfallState = {
     isMuted: false,
     volume: 0.5,
   },
+  metronomeVolume: 0.5,
   countdown: {
     enabled: true,
     isCountingDown: false,
@@ -160,6 +164,9 @@ export const useWaterfallStore = create<WaterfallState & WaterfallActions>(
       set((state) => ({
         audio: { ...state.audio, volume: Math.max(0, Math.min(1, volume)) },
       })),
+
+    setMetronomeVolume: (volume) =>
+      set({ metronomeVolume: Math.max(0, Math.min(1, volume)) }),
 
     toggleCountdown: () =>
       set((state) => ({

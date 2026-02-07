@@ -11,7 +11,8 @@ export interface UseAudioReturn {
   stopNote: (midi: number) => void
   stopAllNotes: () => void
   playClick: (isAccent?: boolean) => void
-  setVolume: (volume: number) => void
+  setMidiVolume: (volume: number) => void
+  setMetronomeVolume: (volume: number) => void
 }
 
 const MIDI_TO_FREQ: number[] = []
@@ -25,7 +26,8 @@ export function useAudio(): UseAudioReturn {
     oscillators: new Map(),
     gainNodes: new Map(),
   })
-  const masterVolumeRef = useRef<number>(0.5)
+  const midiVolumeRef = useRef<number>(0.5)
+  const metronomeVolumeRef = useRef<number>(0.5)
 
   // 初始化音频上下文（用户交互后）
   const ensureContext = useCallback(() => {
@@ -68,7 +70,7 @@ export function useAudio(): UseAudioReturn {
 
       // 创建增益节点（包络）
       const gain = ctx.createGain()
-      const normalizedVelocity = (velocity || 0.7) * masterVolumeRef.current
+      const normalizedVelocity = (velocity || 0.7) * midiVolumeRef.current
 
       // ADSR 包络
       gain.gain.setValueAtTime(0, ctx.currentTime)
@@ -122,8 +124,12 @@ export function useAudio(): UseAudioReturn {
     }
   }, [])
 
-  const setVolume = useCallback((volume: number) => {
-    masterVolumeRef.current = Math.max(0, Math.min(1, volume))
+  const setMidiVolume = useCallback((volume: number) => {
+    midiVolumeRef.current = Math.max(0, Math.min(1, volume))
+  }, [])
+
+  const setMetronomeVolume = useCallback((volume: number) => {
+    metronomeVolumeRef.current = Math.max(0, Math.min(1, volume))
   }, [])
 
   const stopAllNotes = useCallback(() => {
@@ -163,7 +169,7 @@ export function useAudio(): UseAudioReturn {
       osc.frequency.setValueAtTime(isAccent ? 1200 : 800, ctx.currentTime)
       osc.type = 'sine'
 
-      const volume = masterVolumeRef.current * (isAccent ? 0.6 : 0.4)
+      const volume = metronomeVolumeRef.current * (isAccent ? 0.6 : 0.4)
       gain.gain.setValueAtTime(volume, ctx.currentTime)
       gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.08)
 
@@ -201,6 +207,7 @@ export function useAudio(): UseAudioReturn {
     stopNote,
     stopAllNotes,
     playClick,
-    setVolume,
+    setMidiVolume,
+    setMetronomeVolume,
   }
 }

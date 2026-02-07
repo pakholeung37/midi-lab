@@ -25,9 +25,11 @@ export interface ControlPanelProps {
   onToggleMetronome: () => void
   showHelp: boolean
   isMuted: boolean
-  volume: number
+  midiVolume: number
+  metronomeVolume: number
   onToggleMute: () => void
-  onVolumeChange: (volume: number) => void
+  onMidiVolumeChange: (volume: number) => void
+  onMetronomeVolumeChange: (volume: number) => void
   isFullscreen: boolean
   onToggleFullscreen: () => void
   onFileSelect?: (file: File) => void
@@ -57,9 +59,11 @@ export interface BpmControlProps {
 }
 
 export interface SettingsPanelProps {
-  volume: number
+  midiVolume: number
+  metronomeVolume: number
   isMuted: boolean
-  onVolumeChange: (volume: number) => void
+  onMidiVolumeChange: (volume: number) => void
+  onMetronomeVolumeChange: (volume: number) => void
   onToggleMute: () => void
   showHelp: boolean
   onToggleHelp: () => void
@@ -75,8 +79,9 @@ export interface TrackListProps {
 }
 
 export interface VolumeControlProps {
+  label: string
   volume: number
-  isMuted: boolean
+  isMuted?: boolean
   onVolumeChange: (volume: number) => void
-  onToggleMute: () => void
+  onToggleMute?: () => void
 }
