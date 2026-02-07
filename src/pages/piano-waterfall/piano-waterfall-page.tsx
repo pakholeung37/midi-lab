@@ -1,5 +1,4 @@
-import { useEffect } from 'react'
-import { FileDropZone } from './components/file-drop-zone'
+import { useEffect, useMemo } from 'react'
 import { PianoKeyboard } from './components/piano-keyboard'
 import { WaterfallCanvas } from './components/waterfall-canvas'
 import { ControlPanel } from './components/control-panel'
@@ -15,8 +14,7 @@ export function PianoWaterfallPage() {
     midiData,
     playback,
     activeKeys,
-    timeWindow,
-    lookAheadTime,
+    countdown,
     isLoading,
     error,
     showHelp,
@@ -27,15 +25,29 @@ export function PianoWaterfallPage() {
     pause,
     seek,
     setBpm,
-    waterfallHeight,
     isMuted,
     volume,
     toggleMute,
     setVolume,
+    toggleCountdown,
     isFullscreen,
     toggleFullscreen,
     loadDefaultMidi,
+    canvasSize,
   } = usePianoWaterfall()
+
+  // 计算钢琴总宽度
+  const pianoWidth = useMemo(() => {
+    if (pianoLayout.keys.length === 0) return 0
+    const lastKey = pianoLayout.keys[pianoLayout.keys.length - 1]
+    return lastKey.x + lastKey.width
+  }, [pianoLayout.keys])
+
+  // 钢琴键盘高度
+  const pianoHeight = pianoLayout.keys[0]?.height || 0
+
+  // 瀑布流实际高度（容器高度 - 钢琴高度）
+  const actualWaterfallHeight = Math.max(0, canvasSize.height - pianoHeight)
 
   // 键盘快捷键
   useEffect(() => {
@@ -101,12 +113,14 @@ export function PianoWaterfallPage() {
         bpm={playback.bpm}
         originalBpm={playback.originalBpm}
         tracks={midiData?.tracks || []}
+        countdown={countdown}
         onPlay={play}
         onPause={pause}
         onStop={handleStop}
         onSeek={seek}
         onBpmChange={setBpm}
         onToggleHelp={toggleHelp}
+        onToggleCountdown={toggleCountdown}
         showHelp={showHelp}
         isMuted={isMuted}
         volume={volume}
@@ -134,56 +148,45 @@ export function PianoWaterfallPage() {
           background: 'linear-gradient(to bottom, #0f172a 0%, #020617 100%)',
         }}
       >
-        {/* 文件拖拽区域 - 空状态显示 */}
-        {!midiData && (
+        {/* 加载中提示 */}
+        {isLoading && (
           <div className="absolute inset-0 flex items-center justify-center z-20">
-            <FileDropZone
-              onFileSelect={handleFileSelect}
-              isLoading={isLoading}
-            />
+            <div className="flex flex-col items-center gap-4">
+              <div className="w-12 h-12 rounded-full border-4 border-cyan-400/30 border-t-cyan-400 animate-spin" />
+              <span className="text-slate-400 text-sm">正在加载 MIDI 文件...</span>
+            </div>
           </div>
         )}
 
-        {/* 瀑布流 Canvas */}
-        {midiData && pianoLayout.keys.length > 0 && (
-          <div
-            className="absolute left-0 right-0"
-            style={{
-              top: 0,
-              bottom: pianoLayout.keys[0]?.height || 100,
-            }}
-          >
-            <WaterfallCanvas
-              notes={midiData.notes}
-              keys={pianoLayout.keys}
-              currentTime={playback.currentTime}
-              timeWindow={timeWindow}
-              lookAheadTime={lookAheadTime}
-              width={
-                pianoLayout.keys[pianoLayout.keys.length - 1]?.x +
-                  pianoLayout.keys[pianoLayout.keys.length - 1]?.width || 0
-              }
-              height={waterfallHeight}
-              pixelsPerSecond={PIXELS_PER_SECOND}
-            />
-          </div>
-        )}
-
-        {/* 钢琴键盘 Canvas */}
+        {/* 瀑布流和钢琴键盘容器 - 统一宽度和居中 */}
         {pianoLayout.keys.length > 0 && (
           <div
-            className="absolute left-0 right-0 bottom-0"
-            style={{ height: pianoLayout.keys[0]?.height || 100 }}
+            className="absolute inset-0 flex flex-col"
+            style={{ width: pianoWidth }}
           >
-            <PianoKeyboard
-              keys={pianoLayout.keys}
-              activeKeys={activeKeys}
-              width={
-                pianoLayout.keys[pianoLayout.keys.length - 1]?.x +
-                  pianoLayout.keys[pianoLayout.keys.length - 1]?.width || 0
-              }
-              height={pianoLayout.keys[0]?.height || 100}
-            />
+            {/* 瀑布流区域 */}
+            <div className="flex-1 relative overflow-hidden">
+              {midiData && actualWaterfallHeight > 0 && (
+                <WaterfallCanvas
+                  notes={midiData.notes}
+                  keys={pianoLayout.keys}
+                  currentTime={playback.currentTime}
+                  width={pianoWidth}
+                  height={actualWaterfallHeight}
+                  pixelsPerSecond={PIXELS_PER_SECOND}
+                />
+              )}
+            </div>
+
+            {/* 钢琴键盘 */}
+            <div style={{ height: pianoHeight, flexShrink: 0 }}>
+              <PianoKeyboard
+                keys={pianoLayout.keys}
+                activeKeys={activeKeys}
+                width={pianoWidth}
+                height={pianoHeight}
+              />
+            </div>
           </div>
         )}
 

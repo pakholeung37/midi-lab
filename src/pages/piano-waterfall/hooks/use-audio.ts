@@ -9,6 +9,8 @@ interface AudioContextRef {
 export interface UseAudioReturn {
   playNote: (midi: number, velocity: number) => void
   stopNote: (midi: number) => void
+  stopAllNotes: () => void
+  playClick: (isAccent?: boolean) => void
   setVolume: (volume: number) => void
 }
 
@@ -124,6 +126,56 @@ export function useAudio(): UseAudioReturn {
     masterVolumeRef.current = Math.max(0, Math.min(1, volume))
   }, [])
 
+  const stopAllNotes = useCallback(() => {
+    const ctx = audioRef.current.ctx
+    if (!ctx) return
+
+    for (const [midi, osc] of audioRef.current.oscillators) {
+      const gain = audioRef.current.gainNodes.get(midi)
+      if (gain) {
+        const currentGain = gain.gain.value
+        gain.gain.cancelScheduledValues(ctx.currentTime)
+        gain.gain.setValueAtTime(currentGain, ctx.currentTime)
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.05)
+      }
+      setTimeout(() => {
+        try {
+          osc.stop()
+        } catch {
+          // ignore
+        }
+      }, 60)
+    }
+    audioRef.current.oscillators.clear()
+    audioRef.current.gainNodes.clear()
+  }, [])
+
+  // 播放节拍器点击音
+  const playClick = useCallback(
+    (isAccent = false) => {
+      const ctx = ensureContext()
+      if (!ctx) return
+
+      const osc = ctx.createOscillator()
+      const gain = ctx.createGain()
+
+      // 重音用更高的频率
+      osc.frequency.setValueAtTime(isAccent ? 1200 : 800, ctx.currentTime)
+      osc.type = 'sine'
+
+      const volume = masterVolumeRef.current * (isAccent ? 0.6 : 0.4)
+      gain.gain.setValueAtTime(volume, ctx.currentTime)
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.08)
+
+      osc.connect(gain)
+      gain.connect(ctx.destination)
+
+      osc.start()
+      osc.stop(ctx.currentTime + 0.1)
+    },
+    [ensureContext],
+  )
+
   // 清理
   useEffect(() => {
     return () => {
@@ -147,6 +199,8 @@ export function useAudio(): UseAudioReturn {
   return {
     playNote,
     stopNote,
+    stopAllNotes,
+    playClick,
     setVolume,
   }
 }

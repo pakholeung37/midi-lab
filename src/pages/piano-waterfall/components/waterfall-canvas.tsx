@@ -7,8 +7,6 @@ interface WaterfallCanvasProps {
   notes: WaterfallNote[]
   keys: PianoKeyLayout[]
   currentTime: number
-  timeWindow: number // 显示多少秒的音符
-  lookAheadTime: number // 提前量（秒）
   width: number
   height: number
   pixelsPerSecond: number
@@ -18,8 +16,6 @@ export function WaterfallCanvas({
   notes,
   keys,
   currentTime,
-  timeWindow,
-  lookAheadTime,
   width,
   height,
   pixelsPerSecond,
@@ -46,10 +42,10 @@ export function WaterfallCanvas({
     // 清空画布 - 使用透明背景
     ctx.clearRect(0, 0, width, height)
 
-    // 计算时间范围 (从提前量开始显示，给用户准备时间)
-    const renderTime = currentTime - lookAheadTime
-    const startTime = renderTime
-    const endTime = renderTime + timeWindow
+    // 当前播放时间对应底部（钢琴键盘顶部）
+    // 未来的音符在上方，已过去的音符在下方（不可见）
+    const startTime = currentTime
+    const endTime = currentTime + height / pixelsPerSecond
 
     // 过滤可见音符
     const visibleNotes = notes.filter(
@@ -62,10 +58,13 @@ export function WaterfallCanvas({
       const key = keyMap.get(note.midi)
       if (!key) continue
 
-      // 计算音符位置 (基于 renderTime 来定位)
-      const timeToNote = note.time - renderTime
-      const noteY = height - timeToNote * pixelsPerSecond
+      // 计算音符位置
+      // 音符距离当前时间的秒数
+      const timeOffset = note.time - currentTime
+      // 音符底部的 Y 坐标（从底部向上）
+      const noteBottomY = height - timeOffset * pixelsPerSecond
       const noteHeight = Math.max(4, note.duration * pixelsPerSecond)
+      const noteTopY = noteBottomY - noteHeight
 
       // 计算音符宽度 (比琴键略窄)
       const noteWidth = key.isBlack ? key.width * 0.9 : key.width * 0.85
@@ -76,7 +75,7 @@ export function WaterfallCanvas({
       drawGradientRoundRect(
         ctx,
         noteX,
-        noteY - noteHeight,
+        noteTopY,
         noteWidth,
         noteHeight,
         radius,
@@ -85,21 +84,17 @@ export function WaterfallCanvas({
       )
     }
 
-    // 绘制当前时间指示线
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)'
-    ctx.lineWidth = 1
-    ctx.setLineDash([5, 5])
+    // 绘制当前时间指示线（在底部）
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)'
+    ctx.lineWidth = 2
     ctx.beginPath()
-    ctx.moveTo(0, height)
-    ctx.lineTo(width, height)
+    ctx.moveTo(0, height - 1)
+    ctx.lineTo(width, height - 1)
     ctx.stroke()
-    ctx.setLineDash([])
   }, [
     notes,
     keyMap,
     currentTime,
-    timeWindow,
-    lookAheadTime,
     width,
     height,
     pixelsPerSecond,

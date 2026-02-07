@@ -7,6 +7,8 @@ export function ProgressBar({ currentTime, duration, onSeek }: ProgressBarProps)
     return `${mins}:${secs.toString().padStart(2, '0')}`
   }
 
+  const progress = duration > 0 ? (currentTime / duration) * 100 : 0
+
   const handleProgressClick = (e: React.MouseEvent<HTMLDivElement>) => {
     const rect = e.currentTarget.getBoundingClientRect()
     const clickX = e.clientX - rect.left
@@ -22,9 +24,7 @@ export function ProgressBar({ currentTime, duration, onSeek }: ProgressBarProps)
       >
         <div
           className="absolute left-0 top-0 h-full bg-gradient-to-r from-cyan-500 to-blue-500 rounded-full"
-          style={{
-            width: duration > 0 ? `${(currentTime / duration) * 100}%` : '0%',
-          }}
+          style={{ width: `${progress}%` }}
         />
       </div>
       <div className="flex justify-between text-[10px] font-mono text-slate-500">

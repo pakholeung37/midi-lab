@@ -7,12 +7,18 @@ export interface ControlPanelProps {
   bpm: number
   originalBpm: number
   tracks: TrackInfo[]
+  countdown: {
+    enabled: boolean
+    isCountingDown: boolean
+    currentBeat: number
+  }
   onPlay: () => void
   onPause: () => void
   onStop: () => void
   onSeek: (time: number) => void
   onBpmChange: (bpm: number) => void
   onToggleHelp: () => void
+  onToggleCountdown: () => void
   showHelp: boolean
   isMuted: boolean
   volume: number
@@ -27,6 +33,8 @@ export interface ControlPanelProps {
 
 export interface PlayControlsProps {
   isPlaying: boolean
+  isCountingDown: boolean
+  currentBeat: number
   onPlay: () => void
   onPause: () => void
   onStop: () => void
@@ -45,8 +53,6 @@ export interface BpmControlProps {
 }
 
 export interface SettingsPanelProps {
-  isOpen: boolean
-  position: { top: number; right: number }
   volume: number
   isMuted: boolean
   onVolumeChange: (volume: number) => void

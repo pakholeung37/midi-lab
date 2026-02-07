@@ -26,9 +26,11 @@ export function usePianoWaterfall() {
     playback,
     audio,
     activeKeys,
+    countdown,
     midiData: storeMidiData,
     timeWindow,
     lookAheadTime,
+    canvasSize,
     setMidiData,
     play,
     pause,
@@ -37,6 +39,10 @@ export function usePianoWaterfall() {
     setBpm,
     toggleMute,
     setVolume,
+    toggleCountdown,
+    startCountdown,
+    setCountdownBeat,
+    stopCountdown,
     addActiveKey,
     removeActiveKey,
     clearActiveKeys,
@@ -44,6 +50,9 @@ export function usePianoWaterfall() {
     showHelp,
     toggleHelp,
   } = useWaterfallStore()
+
+  // 倒数计时器引用
+  const countdownTimerRef = useRef<number | undefined>(undefined)
 
   // MIDI 输入监听
   const {
@@ -56,7 +65,13 @@ export function usePianoWaterfall() {
   const { midiData, isLoading, error, parseMidiFile } = useMidiFile()
 
   // 音频处理
-  const { playNote, stopNote, setVolume: setAudioVolume } = useAudio()
+  const {
+    playNote,
+    stopNote,
+    stopAllNotes,
+    playClick,
+    setVolume: setAudioVolume,
+  } = useAudio()
 
   // 当解析完成时更新 store
   useEffect(() => {
@@ -102,6 +117,72 @@ export function usePianoWaterfall() {
     }
   }, [parseMidiFile])
 
+  // 带倒数的播放
+  const playWithCountdown = useCallback(() => {
+    // 如果已经在播放或倒数中，直接返回
+    if (playback.isPlaying || countdown.isCountingDown) return
+
+    // 如果未启用倒数，直接播放
+    if (!countdown.enabled) {
+      play()
+      return
+    }
+
+    // 开始倒数
+    startCountdown()
+
+    // 计算每拍间隔（毫秒）
+    const beatInterval = (60 / playback.bpm) * 1000
+
+    // 播放第一个节拍音（重音）
+    playClick(true)
+
+    let beatsRemaining = 3 // 还剩 3 拍
+
+    const tick = () => {
+      if (beatsRemaining > 0) {
+        setCountdownBeat(beatsRemaining)
+        playClick(false)
+        beatsRemaining--
+        countdownTimerRef.current = window.setTimeout(tick, beatInterval)
+      } else {
+        // 倒数结束，开始播放
+        stopCountdown()
+        play()
+      }
+    }
+
+    countdownTimerRef.current = window.setTimeout(tick, beatInterval)
+  }, [
+    playback.isPlaying,
+    playback.bpm,
+    countdown.enabled,
+    countdown.isCountingDown,
+    play,
+    startCountdown,
+    setCountdownBeat,
+    stopCountdown,
+    playClick,
+  ])
+
+  // 取消倒数
+  const cancelCountdown = useCallback(() => {
+    if (countdownTimerRef.current) {
+      clearTimeout(countdownTimerRef.current)
+      countdownTimerRef.current = undefined
+    }
+    stopCountdown()
+  }, [stopCountdown])
+
+  // 清理倒数计时器
+  useEffect(() => {
+    return () => {
+      if (countdownTimerRef.current) {
+        clearTimeout(countdownTimerRef.current)
+      }
+    }
+  }, [])
+
   // 计算钢琴布局
   useEffect(() => {
     const updateLayout = () => {
@@ -130,6 +211,11 @@ export function usePianoWaterfall() {
       stopMidiListening()
     }
   }, [startMidiListening, stopMidiListening])
+
+  // 自动加载默认 MIDI 文件
+  useEffect(() => {
+    loadDefaultMidi()
+  }, [])
 
   // 更新活动按键 (瀑布流触发的)
   const updateActiveKeys = useCallback(
@@ -182,6 +268,8 @@ export function usePianoWaterfall() {
   useEffect(() => {
     if (!playback.isPlaying || !midiData) {
       lastTimeRef.current = 0
+      // 暂停时停止所有音符
+      stopAllNotes()
       return
     }
 
@@ -230,14 +318,16 @@ export function usePianoWaterfall() {
     setCurrentTime,
     clearActiveKeys,
     updateActiveKeys,
+    stopAllNotes,
   ])
 
   // 处理停止
   const handleStop = useCallback(() => {
+    cancelCountdown()
     pause()
     seek(0)
     clearActiveKeys()
-  }, [pause, seek, clearActiveKeys])
+  }, [cancelCountdown, pause, seek, clearActiveKeys])
 
   // 计算瀑布流高度 (时间窗口对应的像素高度)
   const waterfallHeight = timeWindow * PIXELS_PER_SECOND
@@ -266,8 +356,10 @@ export function usePianoWaterfall() {
     midiData,
     playback,
     activeKeys,
+    countdown,
     timeWindow,
     lookAheadTime,
+    canvasSize,
     isLoading,
     error: error || midiInputError,
     showHelp,
@@ -275,7 +367,7 @@ export function usePianoWaterfall() {
     handleStop,
     toggleHelp,
     loadDefaultMidi,
-    play,
+    play: playWithCountdown,
     pause,
     seek,
     setBpm,
@@ -284,6 +376,7 @@ export function usePianoWaterfall() {
     volume: audio.volume,
     toggleMute,
     setVolume,
+    toggleCountdown,
     isFullscreen,
     toggleFullscreen,
   }

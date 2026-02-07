@@ -14,6 +14,12 @@ interface WaterfallState {
   playback: PlaybackState
   // 音频状态
   audio: AudioState
+  // 倒数状态
+  countdown: {
+    enabled: boolean // 是否启用倒数
+    isCountingDown: boolean // 是否正在倒数
+    currentBeat: number // 当前倒数拍数 (4, 3, 2, 1)
+  }
   // 活动按键 (来自瀑布流 + 实时输入)
   activeKeys: Map<number, ActiveKey>
   // 当前可见的音符
@@ -43,6 +49,11 @@ interface WaterfallActions {
   // 音频控制
   toggleMute: () => void
   setVolume: (volume: number) => void
+  // 倒数控制
+  toggleCountdown: () => void
+  startCountdown: () => void
+  setCountdownBeat: (beat: number) => void
+  stopCountdown: () => void
   // 活动按键
   addActiveKey: (key: ActiveKey) => void
   removeActiveKey: (midi: number, source: 'waterfall' | 'input') => void
@@ -70,6 +81,11 @@ const initialState: WaterfallState = {
   audio: {
     isMuted: false,
     volume: 0.5,
+  },
+  countdown: {
+    enabled: true,
+    isCountingDown: false,
+    currentBeat: 0,
   },
   activeKeys: new Map(),
   visibleNotes: [],
@@ -134,6 +150,26 @@ export const useWaterfallStore = create<WaterfallState & WaterfallActions>(
     setVolume: (volume) =>
       set((state) => ({
         audio: { ...state.audio, volume: Math.max(0, Math.min(1, volume)) },
+      })),
+
+    toggleCountdown: () =>
+      set((state) => ({
+        countdown: { ...state.countdown, enabled: !state.countdown.enabled },
+      })),
+
+    startCountdown: () =>
+      set((state) => ({
+        countdown: { ...state.countdown, isCountingDown: true, currentBeat: 4 },
+      })),
+
+    setCountdownBeat: (beat) =>
+      set((state) => ({
+        countdown: { ...state.countdown, currentBeat: beat },
+      })),
+
+    stopCountdown: () =>
+      set((state) => ({
+        countdown: { ...state.countdown, isCountingDown: false, currentBeat: 0 },
       })),
 
     addActiveKey: (key) =>
