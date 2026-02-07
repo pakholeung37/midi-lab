@@ -1,0 +1,273 @@
+import { useEffect, useCallback, useRef, useState } from 'react'
+import { useWaterfallStore } from './hooks/use-waterfall-store'
+import { useMidiFile } from './hooks/use-midi-file'
+import { useMidiInput } from './hooks/use-midi-input'
+import { useAudio } from './hooks/use-audio'
+import { calculatePianoLayout } from './utils/piano-layout'
+import type { PianoKeyLayout } from './utils/piano-layout'
+
+// 像素/秒 的速度
+const PIXELS_PER_SECOND = 150
+
+export function usePianoWaterfall() {
+  const containerRef = useRef<HTMLDivElement>(null)
+  const animationRef = useRef<number | undefined>(undefined)
+  const lastTimeRef = useRef<number>(0)
+  const [pianoLayout, setPianoLayout] = useState<{
+    keys: PianoKeyLayout[]
+    scale: number
+  }>({ keys: [], scale: 1 })
+
+  // Zustand store
+  const {
+    playback,
+    audio,
+    activeKeys,
+    midiData: storeMidiData,
+    timeWindow,
+    lookAheadTime,
+    setMidiData,
+    play,
+    pause,
+    setCurrentTime,
+    seek,
+    setBpm,
+    toggleMute,
+    setVolume,
+    addActiveKey,
+    removeActiveKey,
+    clearActiveKeys,
+    setCanvasSize,
+    showHelp,
+    toggleHelp,
+  } = useWaterfallStore()
+
+  // MIDI 输入监听
+  const {
+    error: midiInputError,
+    startListening: startMidiListening,
+    stopListening: stopMidiListening,
+  } = useMidiInput()
+
+  // MIDI 文件处理
+  const { midiData, isLoading, error, parseMidiFile } = useMidiFile()
+
+  // 音频处理
+  const { playNote, stopNote, setVolume: setAudioVolume } = useAudio()
+
+  // 当解析完成时更新 store
+  useEffect(() => {
+    if (midiData !== storeMidiData) {
+      setMidiData(midiData)
+    }
+  }, [midiData, storeMidiData, setMidiData])
+
+  // 当 MIDI 数据加载时，更新原始 BPM
+  useEffect(() => {
+    if (
+      midiData?.originalBpm &&
+      midiData.originalBpm !== playback.originalBpm
+    ) {
+      const { setBpm } = useWaterfallStore.getState()
+      setBpm(midiData.originalBpm)
+    }
+  }, [midiData, playback.originalBpm])
+
+  // 同步音频音量
+  useEffect(() => {
+    setAudioVolume(audio.volume)
+  }, [audio.volume, setAudioVolume])
+
+  // 处理文件选择
+  const handleFileSelect = useCallback(
+    async (file: File) => {
+      await parseMidiFile(file)
+    },
+    [parseMidiFile],
+  )
+
+  // 计算钢琴布局
+  useEffect(() => {
+    const updateLayout = () => {
+      if (containerRef.current) {
+        const width = containerRef.current.clientWidth
+        const layout = calculatePianoLayout(width)
+        setPianoLayout(layout)
+        setCanvasSize(width, containerRef.current.clientHeight)
+      }
+    }
+
+    updateLayout()
+
+    const resizeObserver = new ResizeObserver(updateLayout)
+    if (containerRef.current) {
+      resizeObserver.observe(containerRef.current)
+    }
+
+    return () => resizeObserver.disconnect()
+  }, [setCanvasSize])
+
+  // 自动启动 MIDI 输入监听
+  useEffect(() => {
+    startMidiListening()
+    return () => {
+      stopMidiListening()
+    }
+  }, [startMidiListening, stopMidiListening])
+
+  // 更新活动按键 (瀑布流触发的)
+  const updateActiveKeys = useCallback(
+    (currentTime: number) => {
+      if (!midiData) return
+
+      // 找到当前应该播放的音符
+      const playingNotes = midiData.notes.filter(
+        (note) =>
+          currentTime >= note.time && currentTime <= note.time + note.duration,
+      )
+
+      // 清除过期的瀑布流按键
+      const currentActives = useWaterfallStore.getState().activeKeys
+      const audioState = useWaterfallStore.getState().audio
+      for (const [midi, activeKey] of currentActives) {
+        if (activeKey.source === 'waterfall') {
+          const stillPlaying = playingNotes.some((n) => n.midi === midi)
+          if (!stillPlaying) {
+            removeActiveKey(midi, 'waterfall')
+            // 停止音频
+            if (!audioState.isMuted) {
+              stopNote(midi)
+            }
+          }
+        }
+      }
+
+      // 添加新的瀑布流按键
+      for (const note of playingNotes) {
+        const existing = useWaterfallStore.getState().activeKeys.get(note.midi)
+        if (!existing || existing.source !== 'waterfall') {
+          addActiveKey({
+            midi: note.midi,
+            velocity: note.velocity,
+            source: 'waterfall',
+            color: note.color,
+          })
+          // 播放音频
+          if (!audioState.isMuted) {
+            playNote(note.midi, note.velocity)
+          }
+        }
+      }
+    },
+    [midiData, addActiveKey, removeActiveKey, playNote, stopNote],
+  )
+
+  // 播放动画循环
+  useEffect(() => {
+    if (!playback.isPlaying || !midiData) {
+      lastTimeRef.current = 0
+      return
+    }
+
+    const animate = (timestamp: number) => {
+      if (!lastTimeRef.current) {
+        lastTimeRef.current = timestamp
+      }
+
+      const deltaTime = (timestamp - lastTimeRef.current) / 1000
+      lastTimeRef.current = timestamp
+
+      // 使用 store 获取最新状态，避免闭包问题
+      const { playback: currentPlayback } = useWaterfallStore.getState()
+      // 计算基于 BPM 的播放速率
+      const playbackRate =
+        currentPlayback.bpm / Math.max(1, currentPlayback.originalBpm)
+      const newTime = currentPlayback.currentTime + deltaTime * playbackRate
+
+      // 检查是否播放结束
+      if (newTime >= midiData.duration) {
+        pause()
+        setCurrentTime(midiData.duration)
+        clearActiveKeys()
+      } else {
+        setCurrentTime(newTime)
+        updateActiveKeys(newTime)
+      }
+
+      if (useWaterfallStore.getState().playback.isPlaying) {
+        animationRef.current = requestAnimationFrame(animate)
+      }
+    }
+
+    animationRef.current = requestAnimationFrame(animate)
+
+    return () => {
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current)
+      }
+      lastTimeRef.current = 0
+    }
+  }, [
+    playback.isPlaying,
+    midiData,
+    pause,
+    setCurrentTime,
+    clearActiveKeys,
+    updateActiveKeys,
+  ])
+
+  // 处理停止
+  const handleStop = useCallback(() => {
+    pause()
+    seek(0)
+    clearActiveKeys()
+  }, [pause, seek, clearActiveKeys])
+
+  // 计算瀑布流高度 (时间窗口对应的像素高度)
+  const waterfallHeight = timeWindow * PIXELS_PER_SECOND
+
+  // 计算全屏状态
+  const [isFullscreen, setIsFullscreen] = useState(false)
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(Boolean(document.fullscreenElement))
+    }
+    document.addEventListener('fullscreenchange', handleFullscreenChange)
+    return () =>
+      document.removeEventListener('fullscreenchange', handleFullscreenChange)
+  }, [])
+  const toggleFullscreen = useCallback(() => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch(console.error)
+    } else {
+      document.exitFullscreen().catch(console.error)
+    }
+  }, [])
+
+  return {
+    containerRef,
+    pianoLayout,
+    midiData,
+    playback,
+    activeKeys,
+    timeWindow,
+    lookAheadTime,
+    isLoading,
+    error: error || midiInputError,
+    showHelp,
+    handleFileSelect,
+    handleStop,
+    toggleHelp,
+    play,
+    pause,
+    seek,
+    setBpm,
+    waterfallHeight,
+    isMuted: audio.isMuted,
+    volume: audio.volume,
+    toggleMute,
+    setVolume,
+    isFullscreen,
+    toggleFullscreen,
+  }
+}

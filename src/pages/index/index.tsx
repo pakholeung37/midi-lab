@@ -1,8 +1,8 @@
 import { Card } from './card'
-import { gamepadControllerRoute } from '../../router'
+import { gamepadControllerRoute, pianoWaterfallRoute } from '../../router'
 
 const items = () =>
-  [gamepadControllerRoute].map((route) => {
+  [gamepadControllerRoute, pianoWaterfallRoute].map((route) => {
     return {
       id: route.id,
       // @ts-expect-error title should be in
@@ -11,7 +11,6 @@ const items = () =>
     }
   })
 export function Index() {
-  console.log(gamepadControllerRoute)
   return (
     <main className="mx-auto flex flex-wrap overflow-hidden">
       {items().map((experiment) => (

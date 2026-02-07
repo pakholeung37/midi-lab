@@ -6,6 +6,7 @@ import {
 import { Index } from './pages/index/index'
 import { MainLayout } from './layouts/main-layout'
 import { GamepadController } from './pages/gamepad-controller/gamepad-controller'
+import { PianoWaterfallPage } from './pages/piano-waterfall/piano-waterfall-page'
 
 declare module '@tanstack/react-router' {
   interface Register {
@@ -32,6 +33,19 @@ export const gamepadControllerRoute = createRoute({
   },
 })
 
-const routeTree = rootRoute.addChildren([indexRoute, gamepadControllerRoute])
+export const pianoWaterfallRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/piano-waterfall',
+  component: PianoWaterfallPage,
+  staticData: {
+    title: 'Piano Waterfall',
+  },
+})
+
+const routeTree = rootRoute.addChildren([
+  indexRoute,
+  gamepadControllerRoute,
+  pianoWaterfallRoute,
+])
 
 export const router = createRouter({ routeTree })
