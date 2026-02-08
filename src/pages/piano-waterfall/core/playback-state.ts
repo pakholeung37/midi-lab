@@ -27,8 +27,14 @@ class PlaybackState {
   bpm = 120
   originalBpm = 120
 
-  // 活动按键状态
-  private activeKeys = new Map<number, ActiveKey>()
+  // 分离的活动按键状态：瀑布流和输入独立管理
+  // 这样音频逻辑不受影响，显示时 input 颜色优先
+  private waterfallKeys = new Map<number, ActiveKey>()
+  private inputKeys = new Map<number, ActiveKey>()
+
+  // 合并后的缓存（避免每次调用都重新合并）
+  private mergedKeys = new Map<number, ActiveKey>()
+  private mergedKeysDirty = true
 
   // 订阅监听器（用于 Canvas 等需要知道何时重绘的场景）
   private listeners = new Set<StateListener>()
@@ -36,40 +42,64 @@ class PlaybackState {
   // 批量更新标志（避免频繁的监听器触发）
   private updateScheduled = false
 
-  /** 获取活动按键的快照（只读） */
+  /** 获取活动按键的快照（只读，input 颜色优先） */
   getActiveKeys(): ReadonlyMap<number, ActiveKey> {
-    return this.activeKeys
+    if (this.mergedKeysDirty) {
+      this.mergedKeys.clear()
+      // 先添加瀑布流按键
+      for (const [midi, key] of this.waterfallKeys) {
+        this.mergedKeys.set(midi, key)
+      }
+      // 再添加输入按键（覆盖瀑布流，实现颜色优先）
+      for (const [midi, key] of this.inputKeys) {
+        this.mergedKeys.set(midi, key)
+      }
+      this.mergedKeysDirty = false
+    }
+    return this.mergedKeys
   }
 
   /** 检查某个 MIDI 键是否处于活动状态 */
   isKeyActive(midi: number): boolean {
-    return this.activeKeys.has(midi)
+    return this.waterfallKeys.has(midi) || this.inputKeys.has(midi)
+  }
+
+  /** 检查瀑布流是否已添加某个键（用于音频控制） */
+  hasWaterfallKey(midi: number): boolean {
+    return this.waterfallKeys.has(midi)
   }
 
   /** 添加活动按键 */
   addActiveKey(key: ActiveKey): void {
-    this.activeKeys.set(key.midi, key)
+    if (key.source === 'waterfall') {
+      this.waterfallKeys.set(key.midi, key)
+    } else {
+      this.inputKeys.set(key.midi, key)
+    }
+    this.mergedKeysDirty = true
     this.notifyUpdate()
   }
 
   /** 移除活动按键 */
   removeActiveKey(midi: number, source?: 'waterfall' | 'input'): void {
     if (!source) {
-      // 不指定来源，直接删除
-      this.activeKeys.delete(midi)
+      // 不指定来源，删除两边
+      this.waterfallKeys.delete(midi)
+      this.inputKeys.delete(midi)
+    } else if (source === 'waterfall') {
+      this.waterfallKeys.delete(midi)
     } else {
-      // 只删除指定来源的按键
-      const existing = this.activeKeys.get(midi)
-      if (existing && existing.source === source) {
-        this.activeKeys.delete(midi)
-      }
+      this.inputKeys.delete(midi)
     }
+    this.mergedKeysDirty = true
     this.notifyUpdate()
   }
 
   /** 清除所有活动按键 */
   clearActiveKeys(): void {
-    this.activeKeys.clear()
+    this.waterfallKeys.clear()
+    this.inputKeys.clear()
+    this.mergedKeysDirty = true
     this.notifyUpdate()
   }
 
@@ -100,7 +130,7 @@ class PlaybackState {
   getSnapshot(): PlaybackSnapshot {
     return {
       currentTime: this.currentTime,
-      activeKeys: new Map(this.activeKeys),
+      activeKeys: new Map(this.getActiveKeys()),
       isPlaying: this.isPlaying,
       bpm: this.bpm,
     }

@@ -204,8 +204,8 @@ export function usePlayback() {
 
       // 添加新的按键
       for (const note of playingNotes) {
-        const existing = playbackState.getActiveKeys().get(note.midi)
-        if (!existing || existing.source !== 'waterfall') {
+        // 使用 hasWaterfallKey 检查，避免合并后的 map 影响判断
+        if (!playbackState.hasWaterfallKey(note.midi)) {
           playbackState.addActiveKey({
             midi: note.midi,
             velocity: note.velocity,
