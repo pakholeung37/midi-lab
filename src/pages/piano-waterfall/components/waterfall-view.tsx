@@ -4,6 +4,7 @@
 import { useEffect, useRef, useCallback, useMemo } from 'react'
 import type { WaterfallNote, ActiveKey } from '../types'
 import type { PianoKeyLayout } from '../utils/piano-layout'
+
 import type { NoteTimeIndex } from '../core/note-index'
 import { playbackState } from '../core/playback-state'
 import { animationLoop, PRIORITY } from '../core/animation-loop'

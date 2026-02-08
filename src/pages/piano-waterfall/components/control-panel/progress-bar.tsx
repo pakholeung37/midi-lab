@@ -65,9 +65,7 @@ export function ProgressBar({
         {/* Draggable thumb */}
         <div
           className={`absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-3 h-3 bg-white rounded-full shadow-md transition-transform pointer-events-none ${
-            isDragging
-              ? 'scale-125'
-              : 'scale-0 group-hover:scale-100'
+            isDragging ? 'scale-125' : 'scale-0 group-hover:scale-100'
           }`}
           style={{ left: `${progress}%` }}
         />

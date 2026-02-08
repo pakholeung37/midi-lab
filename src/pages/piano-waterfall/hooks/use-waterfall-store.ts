@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { persist } from 'zustand/middleware'
 import type { AudioState, MidiFileData } from '../types'
 
 interface WaterfallState {
@@ -66,6 +67,21 @@ interface WaterfallActions {
   toggleHelp: () => void
 }
 
+// 需要持久化的状态（用户偏好设置）
+interface PersistedState {
+  audio: AudioState
+  metronomeVolume: number
+  countdown: {
+    enabled: boolean
+    isCountingDown: boolean
+    currentBeat: number
+  }
+  metronome: {
+    enabled: boolean
+  }
+  showHelp: boolean
+}
+
 const initialState: WaterfallState = {
   midiData: null,
   playback: {
@@ -87,100 +103,123 @@ const initialState: WaterfallState = {
     enabled: false,
   },
   canvasSize: { width: 0, height: 0 },
-  timeWindow: 4, // 默认显示未来 4 秒的音符
-  lookAheadTime: 2, // 默认提前 2 秒显示
+  timeWindow: 4,
+  lookAheadTime: 2,
   showHelp: false,
 }
 
-export const useWaterfallStore = create<WaterfallState & WaterfallActions>(
-  (set, get) => ({
-    ...initialState,
+export const useWaterfallStore = create<
+  WaterfallState & WaterfallActions,
+  [['zustand/persist', PersistedState]]
+>(
+  persist(
+    (set, get) => ({
+      ...initialState,
 
-    setMidiData: (data) =>
-      set({
-        midiData: data,
-        playback: { ...initialState.playback },
-      }),
+      setMidiData: (data) =>
+        set({
+          midiData: data,
+          playback: { ...initialState.playback },
+        }),
 
-    play: () =>
-      set((state) => ({
-        playback: { ...state.playback, isPlaying: true },
-      })),
+      play: () =>
+        set((state) => ({
+          playback: { ...state.playback, isPlaying: true },
+        })),
 
-    pause: () =>
-      set((state) => ({
-        playback: { ...state.playback, isPlaying: false },
-      })),
+      pause: () =>
+        set((state) => ({
+          playback: { ...state.playback, isPlaying: false },
+        })),
 
-    togglePlay: () => {
-      const { playback } = get()
-      set((state) => ({
-        playback: { ...state.playback, isPlaying: !playback.isPlaying },
-      }))
-    },
+      togglePlay: () => {
+        const { playback } = get()
+        set((state) => ({
+          playback: { ...state.playback, isPlaying: !playback.isPlaying },
+        }))
+      },
 
-    seek: (_time: number) => {
-      // seek 已迁移到 playbackState，此方法保留用于兼容
-      // 外部应调用 playbackState.setCurrentTime(time)
-    },
+      seek: (_time: number) => {
+        // seek 已迁移到 playbackState，此方法保留用于兼容
+        // 外部应调用 playbackState.setCurrentTime(time)
+      },
 
-    setBpm: (bpm) =>
-      set((state) => ({
-        playback: {
-          ...state.playback,
-          bpm: Math.max(40, Math.min(240, bpm)),
-        },
-      })),
+      setBpm: (bpm) =>
+        set((state) => ({
+          playback: {
+            ...state.playback,
+            bpm: Math.max(40, Math.min(240, bpm)),
+          },
+        })),
 
-    toggleMute: () =>
-      set((state) => ({
-        audio: { ...state.audio, isMuted: !state.audio.isMuted },
-      })),
+      toggleMute: () =>
+        set((state) => ({
+          audio: { ...state.audio, isMuted: !state.audio.isMuted },
+        })),
 
-    setVolume: (volume) =>
-      set((state) => ({
-        audio: { ...state.audio, volume: Math.max(0, Math.min(1, volume)) },
-      })),
+      setVolume: (volume) =>
+        set((state) => ({
+          audio: { ...state.audio, volume: Math.max(0, Math.min(1, volume)) },
+        })),
 
-    setMetronomeVolume: (volume) =>
-      set({ metronomeVolume: Math.max(0, Math.min(1, volume)) }),
+      setMetronomeVolume: (volume) =>
+        set({ metronomeVolume: Math.max(0, Math.min(1, volume)) }),
 
-    toggleCountdown: () =>
-      set((state) => ({
-        countdown: { ...state.countdown, enabled: !state.countdown.enabled },
-      })),
+      toggleCountdown: () =>
+        set((state) => ({
+          countdown: { ...state.countdown, enabled: !state.countdown.enabled },
+        })),
 
-    startCountdown: () =>
-      set((state) => ({
-        countdown: { ...state.countdown, isCountingDown: true, currentBeat: 4 },
-      })),
+      startCountdown: () =>
+        set((state) => ({
+          countdown: {
+            ...state.countdown,
+            isCountingDown: true,
+            currentBeat: 4,
+          },
+        })),
 
-    setCountdownBeat: (beat) =>
-      set((state) => ({
-        countdown: { ...state.countdown, currentBeat: beat },
-      })),
+      setCountdownBeat: (beat) =>
+        set((state) => ({
+          countdown: { ...state.countdown, currentBeat: beat },
+        })),
 
-    stopCountdown: () =>
-      set((state) => ({
+      stopCountdown: () =>
+        set((state) => ({
+          countdown: {
+            ...state.countdown,
+            isCountingDown: false,
+            currentBeat: 0,
+          },
+        })),
+
+      toggleMetronome: () =>
+        set((state) => ({
+          metronome: { ...state.metronome, enabled: !state.metronome.enabled },
+        })),
+
+      setCanvasSize: (width, height) => set({ canvasSize: { width, height } }),
+
+      setTimeWindow: (seconds) => set({ timeWindow: seconds }),
+
+      setLookAheadTime: (seconds) =>
+        set({ lookAheadTime: Math.max(0, Math.min(10, seconds)) }),
+
+      toggleHelp: () => set((state) => ({ showHelp: !state.showHelp })),
+    }),
+    {
+      name: 'waterfall-store',
+      partialize: (state) => ({
+        audio: state.audio,
+        metronomeVolume: state.metronomeVolume,
         countdown: {
-          ...state.countdown,
+          enabled: state.countdown.enabled,
           isCountingDown: false,
           currentBeat: 0,
         },
-      })),
-
-    toggleMetronome: () =>
-      set((state) => ({
-        metronome: { ...state.metronome, enabled: !state.metronome.enabled },
-      })),
-
-    setCanvasSize: (width, height) => set({ canvasSize: { width, height } }),
-
-    setTimeWindow: (seconds) => set({ timeWindow: seconds }),
-
-    setLookAheadTime: (seconds) =>
-      set({ lookAheadTime: Math.max(0, Math.min(10, seconds)) }),
-
-    toggleHelp: () => set((state) => ({ showHelp: !state.showHelp })),
-  }),
+        metronome: state.metronome,
+        showHelp: state.showHelp,
+      }),
+    },
+  ),
 )
