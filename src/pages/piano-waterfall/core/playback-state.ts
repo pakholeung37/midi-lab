@@ -69,6 +69,11 @@ class PlaybackState {
     return this.waterfallKeys.has(midi)
   }
 
+  /** 获取用户输入按键（用于和弦识别） */
+  getInputKeys(): ReadonlyMap<number, ActiveKey> {
+    return this.inputKeys
+  }
+
   /** 添加活动按键 */
   addActiveKey(key: ActiveKey): void {
     if (key.source === 'waterfall') {

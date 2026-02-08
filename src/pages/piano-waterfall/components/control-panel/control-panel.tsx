@@ -4,6 +4,7 @@ import { Button } from './button'
 import { PlayControls } from './play-controls'
 import { ProgressBar } from './progress-bar'
 import { BpmControl } from './bpm-control'
+import { ChordDisplay } from './chord-display'
 import { SettingsPanelContent } from './settings-panel'
 import type { ControlPanelProps } from './types'
 
@@ -57,6 +58,9 @@ export function ControlPanel({
           duration={duration}
           onSeek={onSeek}
         />
+
+        {/* 和弦显示 */}
+        <ChordDisplay />
 
         {/* 分隔线 */}
         <div className="w-px h-6 bg-slate-700/50" />
