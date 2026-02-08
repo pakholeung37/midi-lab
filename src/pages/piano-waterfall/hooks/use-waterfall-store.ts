@@ -27,6 +27,8 @@ interface WaterfallState {
   }
   // 画布尺寸
   canvasSize: { width: number; height: number }
+  // 瀑布流缩放（像素/秒）
+  pixelsPerSecond: number
   // 时间窗口 (秒) - 显示未来多少秒的音符
   timeWindow: number
   // 提前量 (秒) - 给用户准备时间
@@ -59,6 +61,8 @@ interface WaterfallActions {
   toggleMetronome: () => void
   // 画布尺寸
   setCanvasSize: (width: number, height: number) => void
+  // 瀑布流缩放
+  setPixelsPerSecond: (value: number) => void
   // 时间窗口
   setTimeWindow: (seconds: number) => void
   // 提前量
@@ -71,6 +75,7 @@ interface WaterfallActions {
 interface PersistedState {
   audio: AudioState
   metronomeVolume: number
+  pixelsPerSecond: number
   countdown: {
     enabled: boolean
     isCountingDown: boolean
@@ -103,6 +108,7 @@ const initialState: WaterfallState = {
     enabled: false,
   },
   canvasSize: { width: 0, height: 0 },
+  pixelsPerSecond: 150,
   timeWindow: 4,
   lookAheadTime: 2,
   showHelp: false,
@@ -200,6 +206,9 @@ export const useWaterfallStore = create<
 
       setCanvasSize: (width, height) => set({ canvasSize: { width, height } }),
 
+      setPixelsPerSecond: (value) =>
+        set({ pixelsPerSecond: Math.max(50, Math.min(400, value)) }),
+
       setTimeWindow: (seconds) => set({ timeWindow: seconds }),
 
       setLookAheadTime: (seconds) =>
@@ -212,6 +221,7 @@ export const useWaterfallStore = create<
       partialize: (state) => ({
         audio: state.audio,
         metronomeVolume: state.metronomeVolume,
+        pixelsPerSecond: state.pixelsPerSecond,
         countdown: {
           enabled: state.countdown.enabled,
           isCountingDown: false,

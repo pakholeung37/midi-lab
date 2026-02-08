@@ -35,6 +35,8 @@ export function ControlPanel({
   onToggleFullscreen,
   onFileSelect,
   onLoadDefaultMidi,
+  pixelsPerSecond,
+  onPixelsPerSecondChange,
 }: ControlPanelProps) {
   return (
     <div className="fixed top-3 left-1/2 -translate-x-1/2 z-50">
@@ -114,6 +116,8 @@ export function ControlPanel({
                 onFileSelect={onFileSelect}
                 onLoadDefaultMidi={onLoadDefaultMidi}
                 tracks={tracks}
+                pixelsPerSecond={pixelsPerSecond}
+                onPixelsPerSecondChange={onPixelsPerSecondChange}
               />
             </Popover.Content>
           </Popover.Portal>

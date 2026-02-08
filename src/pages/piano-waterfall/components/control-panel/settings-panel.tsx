@@ -5,6 +5,8 @@ import {
   MdFullscreenExit,
   MdUpload,
   MdMusicNote,
+  MdZoomIn,
+  MdZoomOut,
 } from 'react-icons/md'
 import { Button } from './button'
 import { VolumeControl } from './volume-control'
@@ -25,6 +27,8 @@ export function SettingsPanelContent({
   onFileSelect,
   onLoadDefaultMidi,
   tracks,
+  pixelsPerSecond,
+  onPixelsPerSecondChange,
 }: SettingsPanelProps) {
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -84,6 +88,43 @@ export function SettingsPanelContent({
         volume={metronomeVolume}
         onVolumeChange={onMetronomeVolumeChange}
       />
+
+      {/* 瀑布流缩放 */}
+      <div className="space-y-1.5">
+        <div className="flex items-center justify-between">
+          <span className="text-xs text-slate-400">瀑布流缩放</span>
+          <span className="text-xs text-slate-500 font-mono">
+            {Math.round((pixelsPerSecond / 150) * 100)}%
+          </span>
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => onPixelsPerSecondChange(pixelsPerSecond - 25)}
+            className="p-1 rounded hover:bg-slate-700 text-slate-400 hover:text-slate-200 transition-colors"
+            title="缩小"
+          >
+            <MdZoomOut className="w-4 h-4" />
+          </button>
+          <input
+            type="range"
+            min={50}
+            max={400}
+            step={25}
+            value={pixelsPerSecond}
+            onChange={(e) => onPixelsPerSecondChange(Number(e.target.value))}
+            className="flex-1 h-1 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-cyan-500"
+          />
+          <button
+            type="button"
+            onClick={() => onPixelsPerSecondChange(pixelsPerSecond + 25)}
+            className="p-1 rounded hover:bg-slate-700 text-slate-400 hover:text-slate-200 transition-colors"
+            title="放大"
+          >
+            <MdZoomIn className="w-4 h-4" />
+          </button>
+        </div>
+      </div>
 
       {/* 帮助按钮 */}
       <Button

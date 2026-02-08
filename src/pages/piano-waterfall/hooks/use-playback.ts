@@ -70,9 +70,15 @@ export function usePlayback() {
   // 同步解析后的 MIDI 数据到 store
   useEffect(() => {
     if (parsedMidiData && parsedMidiData !== midiData) {
+      // 重置播放状态
+      storePause()
+      playbackState.setCurrentTime(0)
+      playbackState.clearActiveKeys()
+      stopAllNotes()
+
       setMidiData(parsedMidiData)
     }
-  }, [parsedMidiData, midiData, setMidiData])
+  }, [parsedMidiData, midiData, setMidiData, storePause, stopAllNotes])
 
   // 同步音量到音频引擎
   useEffect(() => {

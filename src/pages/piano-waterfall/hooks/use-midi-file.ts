@@ -1,6 +1,12 @@
 import { useCallback, useState } from 'react'
 import * as ToneMidi from '@tonejs/midi'
-import type { MidiFileData, TrackInfo, WaterfallNote } from '../types'
+import type {
+  MidiFileData,
+  TrackInfo,
+  WaterfallNote,
+  TimeSignature,
+  KeySignature,
+} from '../types'
 import { getTrackColor } from '../utils/note-colors'
 import { NoteTimeIndex } from '../core/note-index'
 
@@ -76,6 +82,32 @@ export function useMidiFile(): UseMidiFileReturn {
         originalBpm = Math.round(tempoEvent.bpm)
       }
 
+      // 提取拍号
+      const timeSignatures: TimeSignature[] =
+        midi.header.timeSignatures?.map((ts) => ({
+          time: midi.header.ticksToSeconds(ts.ticks),
+          numerator: ts.timeSignature[0],
+          denominator: ts.timeSignature[1],
+          measures: ts.measures,
+        })) ?? []
+
+      // 如果没有拍号，默认 4/4
+      if (timeSignatures.length === 0) {
+        timeSignatures.push({
+          time: 0,
+          numerator: 4,
+          denominator: 4,
+        })
+      }
+
+      // 提取调号
+      const keySignatures: KeySignature[] =
+        midi.header.keySignatures?.map((ks) => ({
+          time: midi.header.ticksToSeconds(ks.ticks),
+          key: ks.key,
+          scale: ks.scale as 'major' | 'minor',
+        })) ?? []
+
       // 构建音符时间索引
       const noteIndex = new NoteTimeIndex(notes)
 
@@ -85,6 +117,8 @@ export function useMidiFile(): UseMidiFileReturn {
         duration,
         name: file.name.replace(/\.midi?$/i, ''),
         originalBpm,
+        timeSignatures,
+        keySignatures,
         noteIndex,
       })
     } catch (err) {

@@ -1,3 +1,18 @@
+// 拍号事件
+export interface TimeSignature {
+  time: number // 开始时间（秒）
+  numerator: number // 分子，如 4
+  denominator: number // 分母，如 4
+  measures?: number // 所在小节数
+}
+
+// 调号事件
+export interface KeySignature {
+  time: number // 开始时间（秒）
+  key: string // 调名，如 "C", "G", "Bb", "F#"
+  scale: 'major' | 'minor' // 大调或小调
+}
+
 // 瀑布流音符
 export interface WaterfallNote {
   id: string
@@ -46,5 +61,7 @@ export interface MidiFileData {
   duration: number // 总时长（秒）
   name: string
   originalBpm: number // 原始 BPM
+  timeSignatures: TimeSignature[] // 拍号变化
+  keySignatures: KeySignature[] // 调号变化
   noteIndex?: import('./core/note-index').NoteTimeIndex // 时间索引（可选）
 }

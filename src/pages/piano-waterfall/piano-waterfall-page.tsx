@@ -1,12 +1,11 @@
 import { useEffect, useMemo, useState, useRef } from 'react'
 import { WaterfallView } from './components/waterfall-view'
 import { ControlPanel } from './components/control-panel'
+import { MusicInfoOverlay } from './components/music-info-overlay'
 import { useWaterfallStore } from './hooks/use-waterfall-store'
 import { playbackState } from './core/playback-state'
 import { usePlayback } from './hooks/use-playback'
 import { calculatePianoLayout } from './utils/piano-layout'
-
-const PIXELS_PER_SECOND = 150
 
 export function PianoWaterfallPage() {
   // 从 store 获取 UI 状态
@@ -19,6 +18,7 @@ export function PianoWaterfallPage() {
     metronome,
     canvasSize,
     showHelp,
+    pixelsPerSecond,
     setBpm,
     toggleMute,
     setVolume,
@@ -27,6 +27,7 @@ export function PianoWaterfallPage() {
     toggleMetronome,
     toggleHelp,
     setCanvasSize,
+    setPixelsPerSecond,
   } = useWaterfallStore()
 
   // 容器引用
@@ -165,6 +166,8 @@ export function PianoWaterfallPage() {
         onFileSelect={playbackHook.handleFileSelect}
         onLoadDefaultMidi={playbackHook.loadDefaultMidi}
         hasMidiData={!!midiData}
+        pixelsPerSecond={pixelsPerSecond}
+        onPixelsPerSecondChange={setPixelsPerSecond}
       />
 
       {/* 主画布区域 */}
@@ -199,9 +202,22 @@ export function PianoWaterfallPage() {
               keys={pianoLayout.keys}
               width={pianoWidth}
               height={canvasSize.height}
-              pixelsPerSecond={PIXELS_PER_SECOND}
+              pixelsPerSecond={pixelsPerSecond}
+              keySignatures={midiData?.keySignatures}
+              timeSignatures={midiData?.timeSignatures}
+              originalBpm={midiData?.originalBpm}
             />
           </div>
+        )}
+
+        {/* 乐曲信息 overlay */}
+        {midiData && (
+          <MusicInfoOverlay
+            name={midiData.name}
+            timeSignatures={midiData.timeSignatures}
+            keySignatures={midiData.keySignatures}
+            currentTime={displayTime}
+          />
         )}
 
         {/* 帮助提示 */}

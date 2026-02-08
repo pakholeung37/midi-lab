@@ -2,6 +2,10 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Current Focus
+
+当前正在开发 **piano-waterfall** 页面 (`src/pages/piano-waterfall/`)，一个 MIDI 钢琴瀑布流可视化播放器。
+
 ## Commands
 
 - `pnpm run dev` - Start development server (Vite)

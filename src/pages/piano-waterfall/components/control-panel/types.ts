@@ -35,6 +35,8 @@ export interface ControlPanelProps {
   onFileSelect?: (file: File) => void
   onLoadDefaultMidi?: () => void
   hasMidiData?: boolean
+  pixelsPerSecond: number
+  onPixelsPerSecondChange: (value: number) => void
 }
 
 export interface PlayControlsProps {
@@ -72,6 +74,8 @@ export interface SettingsPanelProps {
   onFileSelect?: (file: File) => void
   onLoadDefaultMidi?: () => void
   tracks: TrackInfo[]
+  pixelsPerSecond: number
+  onPixelsPerSecondChange: (value: number) => void
 }
 
 export interface TrackListProps {
