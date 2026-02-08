@@ -163,6 +163,31 @@ export function WaterfallView({
     [timeSignatures, originalBpm, pixelsPerSecond, width],
   )
 
+  // 绘制八度线（垂直线，在每个 C 音位置）
+  const drawOctaveLines = useCallback(
+    (ctx: CanvasRenderingContext2D, waterfallHeight: number) => {
+      // C 音的 MIDI 编号：C1=24, C2=36, C3=48, C4=60, C5=72, C6=84, C7=96
+      const cNotes = [24, 36, 48, 60, 72, 84, 96]
+
+      ctx.strokeStyle = 'rgba(255,255,255,0.03)'
+      ctx.lineWidth = 1
+      ctx.beginPath()
+
+      for (const midi of cNotes) {
+        const key = keyMap.get(midi)
+        if (key) {
+          // 在 C 键的左边缘画线
+          const x = key.x
+          ctx.moveTo(x, 0)
+          ctx.lineTo(x, waterfallHeight)
+        }
+      }
+
+      ctx.stroke()
+    },
+    [keyMap],
+  )
+
   // 绘制瀑布流音符（动态层）
   const drawNotes = useCallback(
     (ctx: CanvasRenderingContext2D, currentTime: number) => {
@@ -313,6 +338,7 @@ export function WaterfallView({
     // === 动态层：每帧更新 ===
     noteCtx.setTransform(dpr, 0, 0, dpr, 0, 0)
     noteCtx.clearRect(0, 0, width, height)
+    drawOctaveLines(noteCtx, waterfallHeight)
     drawBeatGrid(noteCtx, currentTime, waterfallHeight)
     drawNotes(noteCtx, currentTime)
 
@@ -324,7 +350,7 @@ export function WaterfallView({
       pianoCtx.clearRect(0, 0, width, height)
       drawKeyboard(pianoCtx, activeKeys)
     }
-  }, [width, height, drawBeatGrid, drawNotes, drawKeyboard])
+  }, [width, height, drawOctaveLines, drawBeatGrid, drawNotes, drawKeyboard])
 
   // 订阅动画循环
   useEffect(() => {

@@ -125,7 +125,11 @@ export const useWaterfallStore = create<
       setMidiData: (data) =>
         set({
           midiData: data,
-          playback: { ...initialState.playback },
+          playback: {
+            isPlaying: false,
+            bpm: data?.originalBpm || 120,
+            originalBpm: data?.originalBpm || 120,
+          },
         }),
 
       play: () =>
@@ -154,7 +158,7 @@ export const useWaterfallStore = create<
         set((state) => ({
           playback: {
             ...state.playback,
-            bpm: Math.max(40, Math.min(240, bpm)),
+            bpm: Math.max(0, Math.min(240, bpm)),
           },
         })),
 

@@ -117,7 +117,7 @@ class PlaybackState {
 
   /** 设置 BPM */
   setBpm(bpm: number): void {
-    this.bpm = Math.max(40, Math.min(240, bpm))
+    this.bpm = Math.max(0, Math.min(240, bpm))
     // BPM 变化不需要立即重绘，不触发 notify
   }
 

@@ -125,7 +125,7 @@ export function PianoWaterfallPage() {
           break
         case 'ArrowDown':
           e.preventDefault()
-          setBpm(Math.max(40, playback.bpm - 5))
+          setBpm(Math.max(0, playback.bpm - 5))
           break
       }
     }

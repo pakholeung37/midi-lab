@@ -44,7 +44,7 @@ export function BpmControl({ bpm, originalBpm, onBpmChange }: BpmControlProps) {
             className="relative flex items-center select-none touch-none w-full h-5"
             value={[bpm]}
             onValueChange={([value]) => onBpmChange(value)}
-            min={40}
+            min={0}
             max={200}
             step={1}
           >
@@ -58,7 +58,7 @@ export function BpmControl({ bpm, originalBpm, onBpmChange }: BpmControlProps) {
           </Slider.Root>
 
           <div className="flex justify-between mt-1 text-[10px] text-slate-600">
-            <span>40</span>
+            <span>0</span>
             <span>200</span>
           </div>
 

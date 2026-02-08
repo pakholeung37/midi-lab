@@ -11,6 +11,7 @@ import { useAudio } from './use-audio'
 import { calculatePianoLayout } from '../utils/piano-layout'
 import { useAnimationFrame, PRIORITY } from './use-animation-frame'
 import type { PianoKeyLayout } from '../utils/piano-layout'
+import type { TimeSignature } from '../types'
 
 const PIXELS_PER_SECOND = 150
 const DEFAULT_MIDI_FILE = '/One_Summers_Day_Spirited_Away__Joe_Hisaishi.mid'
@@ -23,8 +24,7 @@ export function usePlayback() {
     scale: 1,
   })
 
-  // 节拍器和倒数计时器引用
-  const metronomeIntervalRef = useRef<number | undefined>(undefined)
+  // 倒数计时器引用
   const countdownTimeoutRef = useRef<number | undefined>(undefined)
 
   // Store 状态（只读 UI 状态）
@@ -164,7 +164,8 @@ export function usePlayback() {
       // 计算基于 BPM 的播放速率
       const playbackRate =
         storePlayback.bpm / Math.max(1, storePlayback.originalBpm)
-      const newTime = playbackState.currentTime + deltaTime * playbackRate
+      const prevTime = playbackState.currentTime
+      const newTime = prevTime + deltaTime * playbackRate
 
       // 检查是否播放结束
       if (midiData && newTime >= midiData.duration) {
@@ -178,6 +179,11 @@ export function usePlayback() {
 
         // 更新活动按键（触发音频播放）
         updateActiveKeys(newTime)
+
+        // 节拍器：检测是否跨越了节拍点
+        if (metronome.enabled && midiData?.timeSignatures) {
+          checkMetronomeBeat(prevTime, newTime, midiData.timeSignatures)
+        }
       }
     },
     storePlayback.isPlaying && !countdown.isCountingDown,
@@ -227,34 +233,42 @@ export function usePlayback() {
     [midiData, audio.isMuted, playNote, stopNote],
   )
 
-  // ===== 节拍器 =====
-  useEffect(() => {
-    if (!metronome.enabled || !storePlayback.isPlaying) {
-      if (metronomeIntervalRef.current) {
-        clearInterval(metronomeIntervalRef.current)
-        metronomeIntervalRef.current = undefined
+  // 节拍器：检测跨越节拍点并播放 click
+  const checkMetronomeBeat = useCallback(
+    (
+      prevTime: number,
+      currentTime: number,
+      timeSignatures: TimeSignature[],
+    ) => {
+      // 使用原始 BPM 计算节拍（与节拍网格一致）
+      const bpm = midiData?.originalBpm || 120
+      const beatDuration = 60 / bpm
+
+      // 获取当前拍号
+      let ts = timeSignatures[0]
+      for (let i = timeSignatures.length - 1; i >= 0; i--) {
+        if (timeSignatures[i].time <= currentTime) {
+          ts = timeSignatures[i]
+          break
+        }
       }
-      return
-    }
+      const beatsPerMeasure = ts?.numerator || 4
 
-    const beatInterval = (60 / storePlayback.bpm) * 1000
+      // 计算上一帧和当前帧的节拍索引
+      const prevBeatIndex = Math.floor(prevTime / beatDuration)
+      const currentBeatIndex = Math.floor(currentTime / beatDuration)
 
-    // 立即播放第一拍
-    playClick(true)
-
-    let beatCount = 1
-    metronomeIntervalRef.current = window.setInterval(() => {
-      const isAccent = beatCount % 4 === 0
-      playClick(isAccent)
-      beatCount++
-    }, beatInterval)
-
-    return () => {
-      if (metronomeIntervalRef.current) {
-        clearInterval(metronomeIntervalRef.current)
+      // 如果跨越了节拍点
+      if (currentBeatIndex > prevBeatIndex && currentBeatIndex >= 0) {
+        // 计算小节内的拍数 (0-based)
+        const beatInMeasure = currentBeatIndex % beatsPerMeasure
+        // 第一拍是强拍
+        const isAccent = beatInMeasure === 0
+        playClick(isAccent)
       }
-    }
-  }, [metronome.enabled, storePlayback.isPlaying, storePlayback.bpm, playClick])
+    },
+    [midiData?.originalBpm, playClick],
+  )
 
   // ===== 倒数功能 =====
   const playWithCountdown = useCallback(() => {
@@ -311,9 +325,6 @@ export function usePlayback() {
     return () => {
       if (countdownTimeoutRef.current) {
         clearTimeout(countdownTimeoutRef.current)
-      }
-      if (metronomeIntervalRef.current) {
-        clearInterval(metronomeIntervalRef.current)
       }
     }
   }, [])
