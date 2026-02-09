@@ -475,7 +475,23 @@ export function usePlayback() {
       const measureDuration = getMeasureDuration()
       const currentTime = playbackState.currentTime
       const currentMeasure = Math.floor(currentTime / measureDuration)
-      const targetMeasure = currentMeasure + direction
+
+      let targetMeasure: number
+      if (direction === -1) {
+        // 后退：先回到当前小节开头
+        const currentMeasureStart = currentMeasure * measureDuration
+        // 如果已经在小节开头附近（0.3秒内），则回到上一个小节
+        const threshold = 0.3
+        if (currentTime - currentMeasureStart < threshold) {
+          targetMeasure = currentMeasure - 1
+        } else {
+          targetMeasure = currentMeasure
+        }
+      } else {
+        // 前进：直接到下一个小节
+        targetMeasure = currentMeasure + 1
+      }
+
       const targetTime = Math.max(0, targetMeasure * measureDuration)
 
       if (midiData) {
