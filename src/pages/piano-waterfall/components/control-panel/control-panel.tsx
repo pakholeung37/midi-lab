@@ -40,7 +40,8 @@ export function ControlPanel({
   isFullscreen,
   onToggleFullscreen,
   onFileSelect,
-  onLoadDefaultMidi,
+  onMidiSelect,
+  selectedMidiPath,
   pixelsPerSecond,
   onPixelsPerSecondChange,
   themeId,
@@ -133,7 +134,8 @@ export function ControlPanel({
                 isFullscreen={isFullscreen}
                 onToggleFullscreen={onToggleFullscreen}
                 onFileSelect={onFileSelect}
-                onLoadDefaultMidi={onLoadDefaultMidi}
+                onMidiSelect={onMidiSelect}
+                selectedMidiPath={selectedMidiPath}
                 tracks={tracks}
                 pixelsPerSecond={pixelsPerSecond}
                 onPixelsPerSecondChange={onPixelsPerSecondChange}

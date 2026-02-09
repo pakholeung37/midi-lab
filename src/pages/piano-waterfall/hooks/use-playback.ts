@@ -14,7 +14,6 @@ import type { PianoKeyLayout } from '../utils/piano-layout'
 import type { TimeSignature } from '../types'
 
 const PIXELS_PER_SECOND = 150
-const DEFAULT_MIDI_FILE = '/One_Summers_Day_Spirited_Away__Joe_Hisaishi.mid'
 
 export function usePlayback() {
   const containerRef = useRef<HTMLDivElement>(null)
@@ -27,6 +26,9 @@ export function usePlayback() {
   // 倒数计时器引用
   const countdownTimeoutRef = useRef<number | undefined>(undefined)
 
+  // 初始加载标记
+  const initialLoadDoneRef = useRef(false)
+
   // Store 状态（只读 UI 状态）
   const {
     midiData,
@@ -37,7 +39,9 @@ export function usePlayback() {
     metronome,
     canvasSize,
     timeWindow,
+    selectedMidiPath,
     setMidiData,
+    setSelectedMidiPath,
     play: storePlay,
     pause: storePause,
     seek,
@@ -105,23 +109,32 @@ export function usePlayback() {
     return () => stopListening()
   }, [startListening, stopListening])
 
-  // 加载默认 MIDI 文件
-  const loadDefaultMidi = useCallback(async () => {
-    try {
-      const response = await fetch(DEFAULT_MIDI_FILE)
-      if (!response.ok) throw new Error('Failed to load default MIDI')
-      const blob = await response.blob()
-      const file = new File([blob], 'default.mid', { type: 'audio/midi' })
-      await parseMidiFile(file)
-    } catch (err) {
-      console.error('Failed to load default MIDI:', err)
-    }
-  }, [parseMidiFile])
+  // 加载 MIDI 文件（通过路径）
+  const loadMidiFromPath = useCallback(
+    async (path: string) => {
+      try {
+        const response = await fetch(path)
+        if (!response.ok) throw new Error('Failed to load MIDI')
+        const blob = await response.blob()
+        const filename = path.split('/').pop() || 'midi.mid'
+        const file = new File([blob], filename, { type: 'audio/midi' })
+        await parseMidiFile(file, themeId)
+        setSelectedMidiPath(path)
+      } catch (err) {
+        console.error('Failed to load MIDI:', err)
+      }
+    },
+    [parseMidiFile, setSelectedMidiPath, themeId],
+  )
 
-  // 自动加载默认文件
+  // 自动加载持久化的 MIDI 文件
   useEffect(() => {
-    loadDefaultMidi()
-  }, [loadDefaultMidi])
+    if (initialLoadDoneRef.current) return
+    if (selectedMidiPath && !midiData) {
+      initialLoadDoneRef.current = true
+      loadMidiFromPath(selectedMidiPath)
+    }
+  }, [selectedMidiPath, midiData, loadMidiFromPath])
 
   // 计算钢琴布局
   useEffect(() => {
@@ -496,6 +509,7 @@ export function usePlayback() {
     showHelp,
     themeId,
     loop,
+    selectedMidiPath,
 
     // Actions
     play: playWithCountdown,
@@ -509,8 +523,11 @@ export function usePlayback() {
     toggleMetronome,
     toggleHelp,
     handleStop,
-    loadDefaultMidi,
-    handleFileSelect: parseMidiFile,
+    loadMidiFromPath,
+    handleFileSelect: async (file: File) => {
+      await parseMidiFile(file, themeId)
+      setSelectedMidiPath(null) // 清除持久化路径，因为是本地上传
+    },
     isLoading,
     isFullscreen,
     toggleFullscreen,

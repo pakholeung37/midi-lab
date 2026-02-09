@@ -6,6 +6,8 @@ import { DEFAULT_THEME_ID } from '../utils/themes'
 interface WaterfallState {
   // MIDI 文件数据（带索引）
   midiData: MidiFileData | null
+  // 当前选择的 MIDI 文件路径（持久化）
+  selectedMidiPath: string | null
   // 播放控制状态（UI 用）
   playback: {
     isPlaying: boolean
@@ -49,6 +51,8 @@ interface WaterfallState {
 interface WaterfallActions {
   // 设置 MIDI 数据
   setMidiData: (data: MidiFileData | null) => void
+  // 设置选择的 MIDI 文件路径
+  setSelectedMidiPath: (path: string | null) => void
   // 播放控制
   play: () => void
   pause: () => void
@@ -90,6 +94,7 @@ interface PersistedState {
   audio: AudioState
   metronomeVolume: number
   pixelsPerSecond: number
+  selectedMidiPath: string | null
   countdown: {
     enabled: boolean
     isCountingDown: boolean
@@ -109,6 +114,7 @@ interface PersistedState {
 
 const initialState: WaterfallState = {
   midiData: null,
+  selectedMidiPath: null,
   playback: {
     isPlaying: false,
     bpm: 120,
@@ -157,6 +163,8 @@ export const useWaterfallStore = create<
             originalBpm: data?.originalBpm || 120,
           },
         }),
+
+      setSelectedMidiPath: (path) => set({ selectedMidiPath: path }),
 
       play: () =>
         set((state) => ({
@@ -268,6 +276,7 @@ export const useWaterfallStore = create<
         audio: state.audio,
         metronomeVolume: state.metronomeVolume,
         pixelsPerSecond: state.pixelsPerSecond,
+        selectedMidiPath: state.selectedMidiPath,
         countdown: {
           enabled: state.countdown.enabled,
           isCountingDown: false,

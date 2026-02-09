@@ -164,7 +164,8 @@ export function PianoWaterfallPage() {
         isFullscreen={playbackHook.isFullscreen}
         onToggleFullscreen={playbackHook.toggleFullscreen}
         onFileSelect={playbackHook.handleFileSelect}
-        onLoadDefaultMidi={playbackHook.loadDefaultMidi}
+        onMidiSelect={playbackHook.loadMidiFromPath}
+        selectedMidiPath={playbackHook.selectedMidiPath}
         hasMidiData={!!midiData}
         pixelsPerSecond={pixelsPerSecond}
         onPixelsPerSecondChange={setPixelsPerSecond}

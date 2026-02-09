@@ -41,7 +41,8 @@ export interface ControlPanelProps {
   isFullscreen: boolean
   onToggleFullscreen: () => void
   onFileSelect?: (file: File) => void
-  onLoadDefaultMidi?: () => void
+  onMidiSelect?: (path: string) => void
+  selectedMidiPath?: string | null
   hasMidiData?: boolean
   pixelsPerSecond: number
   onPixelsPerSecondChange: (value: number) => void
@@ -82,7 +83,8 @@ export interface SettingsPanelProps {
   isFullscreen: boolean
   onToggleFullscreen: () => void
   onFileSelect?: (file: File) => void
-  onLoadDefaultMidi?: () => void
+  onMidiSelect?: (path: string) => void
+  selectedMidiPath?: string | null
   tracks: TrackInfo[]
   pixelsPerSecond: number
   onPixelsPerSecondChange: (value: number) => void

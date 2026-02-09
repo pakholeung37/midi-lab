@@ -4,7 +4,6 @@ import {
   MdFullscreen,
   MdFullscreenExit,
   MdUpload,
-  MdMusicNote,
   MdZoomIn,
   MdZoomOut,
 } from 'react-icons/md'
@@ -13,6 +12,7 @@ import { VolumeControl } from './volume-control'
 import { TrackList } from './track-list'
 import type { SettingsPanelProps } from './types'
 import { THEMES } from '../../utils/themes'
+import { midiFiles } from 'virtual:midi-list'
 
 export function SettingsPanelContent({
   midiVolume,
@@ -26,7 +26,8 @@ export function SettingsPanelContent({
   isFullscreen,
   onToggleFullscreen,
   onFileSelect,
-  onLoadDefaultMidi,
+  onMidiSelect,
+  selectedMidiPath,
   tracks,
   pixelsPerSecond,
   onPixelsPerSecondChange,
@@ -39,7 +40,28 @@ export function SettingsPanelContent({
     <div className="w-56 p-3 space-y-3">
       <h3 className="text-xs font-medium text-slate-300">设置</h3>
 
-      {/* 上传 MIDI / 加载默认 */}
+      {/* MIDI 文件选择 */}
+      {midiFiles.length > 0 && (
+        <div className="space-y-1.5">
+          <span className="text-xs text-slate-400">MIDI 文件</span>
+          <select
+            value={selectedMidiPath || ''}
+            onChange={(e) => onMidiSelect?.(e.target.value)}
+            className="w-full px-2 py-1.5 rounded-lg bg-slate-800 border border-slate-700 text-xs text-slate-200 focus:outline-none focus:ring-1 focus:ring-cyan-500"
+          >
+            <option value="" disabled>
+              选择文件...
+            </option>
+            {midiFiles.map((file) => (
+              <option key={file.path} value={file.path}>
+                {file.name}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
+
+      {/* 上传 MIDI */}
       <div className="flex gap-2">
         <Button
           onClick={() => fileInputRef.current?.click()}
@@ -50,16 +72,6 @@ export function SettingsPanelContent({
           className="flex-1"
         >
           上传 MIDI
-        </Button>
-        <Button
-          onClick={onLoadDefaultMidi}
-          variant="default"
-          size="lg"
-          icon={<MdMusicNote className="w-3.5 h-3.5" />}
-          title="加载示例 MIDI"
-          className="flex-1"
-        >
-          示例音乐
         </Button>
         <input
           ref={fileInputRef}
