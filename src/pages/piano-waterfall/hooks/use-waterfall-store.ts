@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import type { AudioState, MidiFileData } from '../types'
+import { DEFAULT_THEME_ID } from '../utils/themes'
 
 interface WaterfallState {
   // MIDI 文件数据（带索引）
@@ -35,6 +36,14 @@ interface WaterfallState {
   lookAheadTime: number
   // 是否显示帮助
   showHelp: boolean
+  // 瀑布流主题 ID
+  themeId: string
+  // 小节循环状态
+  loop: {
+    enabled: boolean // 是否启用循环
+    startMeasure: number // 开始小节（1-based）
+    endMeasure: number // 结束小节（1-based）
+  }
 }
 
 interface WaterfallActions {
@@ -69,6 +78,11 @@ interface WaterfallActions {
   setLookAheadTime: (seconds: number) => void
   // 帮助
   toggleHelp: () => void
+  // 主题
+  setThemeId: (id: string) => void
+  // 循环控制
+  toggleLoop: () => void
+  setLoopRange: (start: number, end: number) => void
 }
 
 // 需要持久化的状态（用户偏好设置）
@@ -85,6 +99,12 @@ interface PersistedState {
     enabled: boolean
   }
   showHelp: boolean
+  themeId: string
+  loop: {
+    enabled: boolean
+    startMeasure: number
+    endMeasure: number
+  }
 }
 
 const initialState: WaterfallState = {
@@ -112,6 +132,12 @@ const initialState: WaterfallState = {
   timeWindow: 4,
   lookAheadTime: 2,
   showHelp: false,
+  themeId: DEFAULT_THEME_ID,
+  loop: {
+    enabled: false,
+    startMeasure: 1,
+    endMeasure: 4,
+  },
 }
 
 export const useWaterfallStore = create<
@@ -219,6 +245,22 @@ export const useWaterfallStore = create<
         set({ lookAheadTime: Math.max(0, Math.min(10, seconds)) }),
 
       toggleHelp: () => set((state) => ({ showHelp: !state.showHelp })),
+
+      setThemeId: (id) => set({ themeId: id }),
+
+      toggleLoop: () =>
+        set((state) => ({
+          loop: { ...state.loop, enabled: !state.loop.enabled },
+        })),
+
+      setLoopRange: (start, end) =>
+        set((state) => ({
+          loop: {
+            ...state.loop,
+            startMeasure: Math.max(1, start),
+            endMeasure: Math.max(start, end),
+          },
+        })),
     }),
     {
       name: 'waterfall-store',
@@ -233,6 +275,8 @@ export const useWaterfallStore = create<
         },
         metronome: state.metronome,
         showHelp: state.showHelp,
+        themeId: state.themeId,
+        loop: state.loop,
       }),
     },
   ),

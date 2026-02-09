@@ -110,7 +110,7 @@ export function WaterfallView({
       )
 
       // 按强度分组批量绘制
-      const strong: number[] = []
+      const strong: { y: number; measure: number }[] = []
       const medium: number[] = []
       const weak: number[] = []
 
@@ -119,7 +119,8 @@ export function WaterfallView({
         const y = waterfallHeight - timeOffset * pixelsPerSecond
         if (y < 0 || y > waterfallHeight) continue
 
-        if (beat.strength === 'strong') strong.push(y)
+        if (beat.strength === 'strong')
+          strong.push({ y, measure: beat.measure })
         else if (beat.strength === 'medium') medium.push(y)
         else weak.push(y)
       }
@@ -153,11 +154,20 @@ export function WaterfallView({
         ctx.strokeStyle = 'rgba(255,255,255,0.4)'
         ctx.lineWidth = 1.5
         ctx.beginPath()
-        for (const y of strong) {
+        for (const { y } of strong) {
           ctx.moveTo(0, y)
           ctx.lineTo(width, y)
         }
         ctx.stroke()
+
+        // 绘制小节号
+        ctx.font = '10px monospace'
+        ctx.fillStyle = 'rgba(255,255,255,0.5)'
+        ctx.textAlign = 'left'
+        ctx.textBaseline = 'bottom'
+        for (const { y, measure } of strong) {
+          ctx.fillText(String(measure), 4, y - 2)
+        }
       }
     },
     [timeSignatures, originalBpm, pixelsPerSecond, width],
@@ -231,7 +241,7 @@ export function WaterfallView({
         ctx.fill()
       }
 
-      // 绘制调外音
+      // 绘制调外音（更浅的颜色）
       if (hasKeyInfo) {
         for (const note of visibleNotes) {
           const key = keyMap.get(note.midi)
@@ -248,7 +258,7 @@ export function WaterfallView({
           const noteWidth = key.isBlack ? key.width * 0.9 : key.width * 0.85
           const noteX = key.x + (key.width - noteWidth) / 2
 
-          ctx.fillStyle = colorToRgba(note.color, 0.4)
+          ctx.fillStyle = colorToRgba(note.color, 0.35)
           drawRoundRectPath(ctx, noteX, noteTopY, noteWidth, noteHeight, radius)
           ctx.fill()
         }

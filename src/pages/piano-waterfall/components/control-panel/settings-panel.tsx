@@ -12,6 +12,7 @@ import { Button } from './button'
 import { VolumeControl } from './volume-control'
 import { TrackList } from './track-list'
 import type { SettingsPanelProps } from './types'
+import { THEMES } from '../../utils/themes'
 
 export function SettingsPanelContent({
   midiVolume,
@@ -29,6 +30,8 @@ export function SettingsPanelContent({
   tracks,
   pixelsPerSecond,
   onPixelsPerSecondChange,
+  themeId,
+  onThemeChange,
 }: SettingsPanelProps) {
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -123,6 +126,42 @@ export function SettingsPanelContent({
           >
             <MdZoomIn className="w-4 h-4" />
           </button>
+        </div>
+      </div>
+
+      {/* 颜色主题 */}
+      <div className="space-y-1.5">
+        <span className="text-xs text-slate-400">颜色主题</span>
+        <div className="grid grid-cols-4 gap-1.5">
+          {THEMES.map((theme) => (
+            <button
+              type="button"
+              key={theme.id}
+              onClick={() => onThemeChange(theme.id)}
+              className={`
+                relative p-1.5 rounded text-xs transition-all
+                ${
+                  themeId === theme.id
+                    ? 'bg-slate-600 ring-1 ring-cyan-500'
+                    : 'bg-slate-700 hover:bg-slate-600'
+                }
+              `}
+              title={theme.name}
+            >
+              <div className="flex gap-0.5 mb-1">
+                {theme.colors.slice(0, 4).map((color, i) => (
+                  <div
+                    key={i}
+                    className="w-2 h-2 rounded-sm"
+                    style={{ backgroundColor: color }}
+                  />
+                ))}
+              </div>
+              <span className="text-slate-300 text-[10px] leading-none">
+                {theme.name}
+              </span>
+            </button>
+          ))}
         </div>
       </div>
 

@@ -5,6 +5,7 @@ import { PlayControls } from './play-controls'
 import { ProgressBar } from './progress-bar'
 import { BpmControl } from './bpm-control'
 import { ChordDisplay } from './chord-display'
+import { LoopControl } from './loop-control'
 import { SettingsPanelContent } from './settings-panel'
 import type { ControlPanelProps } from './types'
 
@@ -17,6 +18,8 @@ export function ControlPanel({
   tracks,
   countdown,
   metronome,
+  loop,
+  totalMeasures,
   onPlay,
   onPause,
   onStop,
@@ -25,6 +28,8 @@ export function ControlPanel({
   onToggleHelp,
   onToggleCountdown,
   onToggleMetronome,
+  onToggleLoop,
+  onLoopRangeChange,
   showHelp,
   isMuted,
   midiVolume,
@@ -38,6 +43,8 @@ export function ControlPanel({
   onLoadDefaultMidi,
   pixelsPerSecond,
   onPixelsPerSecondChange,
+  themeId,
+  onThemeChange,
 }: ControlPanelProps) {
   return (
     <div className="fixed top-3 left-1/2 -translate-x-1/2 z-50">
@@ -89,6 +96,14 @@ export function ControlPanel({
           title={metronome.enabled ? '节拍器已启用' : '节拍器已禁用'}
         />
 
+        {/* 小节循环 */}
+        <LoopControl
+          loop={loop}
+          totalMeasures={totalMeasures}
+          onToggleLoop={onToggleLoop}
+          onLoopRangeChange={onLoopRangeChange}
+        />
+
         {/* 设置按钮 - Radix Popover */}
         <Popover.Root>
           <Popover.Trigger asChild>
@@ -122,6 +137,8 @@ export function ControlPanel({
                 tracks={tracks}
                 pixelsPerSecond={pixelsPerSecond}
                 onPixelsPerSecondChange={onPixelsPerSecondChange}
+                themeId={themeId}
+                onThemeChange={onThemeChange}
               />
             </Popover.Content>
           </Popover.Portal>

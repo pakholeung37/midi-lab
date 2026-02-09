@@ -19,6 +19,8 @@ export function PianoWaterfallPage() {
     canvasSize,
     showHelp,
     pixelsPerSecond,
+    themeId,
+    loop,
     setBpm,
     toggleMute,
     setVolume,
@@ -107,17 +109,11 @@ export function PianoWaterfallPage() {
           break
         case 'ArrowLeft':
           e.preventDefault()
-          playbackState.setCurrentTime(
-            Math.max(0, playbackState.currentTime - 5),
-          )
+          playbackHook.seekByMeasure(-1)
           break
         case 'ArrowRight':
           e.preventDefault()
-          if (midiData) {
-            playbackState.setCurrentTime(
-              Math.min(midiData.duration, playbackState.currentTime + 5),
-            )
-          }
+          playbackHook.seekByMeasure(1)
           break
         case 'ArrowUp':
           e.preventDefault()
@@ -132,7 +128,7 @@ export function PianoWaterfallPage() {
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [playback.isPlaying, playback.bpm, midiData, playbackHook, setBpm])
+  }, [playback.isPlaying, playback.bpm, playbackHook, setBpm])
 
   return (
     <div className="flex flex-col h-screen w-screen bg-slate-950 overflow-hidden">
@@ -146,6 +142,8 @@ export function PianoWaterfallPage() {
         tracks={midiData?.tracks || []}
         countdown={countdown}
         metronome={metronome}
+        loop={loop}
+        totalMeasures={playbackHook.getTotalMeasures()}
         onPlay={playbackHook.play}
         onPause={playbackHook.pause}
         onStop={playbackHook.handleStop}
@@ -154,6 +152,8 @@ export function PianoWaterfallPage() {
         onToggleHelp={toggleHelp}
         onToggleCountdown={toggleCountdown}
         onToggleMetronome={toggleMetronome}
+        onToggleLoop={playbackHook.toggleLoop}
+        onLoopRangeChange={playbackHook.setLoopRange}
         showHelp={showHelp}
         isMuted={audio.isMuted}
         midiVolume={audio.volume}
@@ -168,6 +168,8 @@ export function PianoWaterfallPage() {
         hasMidiData={!!midiData}
         pixelsPerSecond={pixelsPerSecond}
         onPixelsPerSecondChange={setPixelsPerSecond}
+        themeId={themeId}
+        onThemeChange={playbackHook.handleThemeChange}
       />
 
       {/* 主画布区域 */}
@@ -235,7 +237,7 @@ export function PianoWaterfallPage() {
                 <span className="px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 font-mono">
                   ← →
                 </span>
-                <span className="text-slate-500">前进/后退 5s</span>
+                <span className="text-slate-500">上/下一小节</span>
               </li>
               <li className="flex items-center justify-between">
                 <span className="px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 font-mono">

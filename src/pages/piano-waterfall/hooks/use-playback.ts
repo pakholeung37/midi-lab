@@ -53,10 +53,20 @@ export function usePlayback() {
     setCanvasSize,
     showHelp,
     toggleHelp,
+    themeId,
+    setThemeId,
+    loop,
+    toggleLoop,
+    setLoopRange,
   } = useWaterfallStore()
 
   // Hooks
-  const { midiData: parsedMidiData, parseMidiFile, isLoading } = useMidiFile()
+  const {
+    midiData: parsedMidiData,
+    parseMidiFile,
+    recolorNotes,
+    isLoading,
+  } = useMidiFile()
   const { startListening, stopListening } = useMidiInput()
   const {
     playNote,
@@ -154,6 +164,26 @@ export function usePlayback() {
     }
   }, [storePlayback.isPlaying, stopNote, stopAllNotes])
 
+  // 计算小节时间范围（用于循环）- 提前定义以便在播放循环中使用
+  const getLoopTimeRange = useCallback(() => {
+    if (!loop.enabled || !midiData?.timeSignatures?.length) {
+      return null
+    }
+    const bpm = midiData.originalBpm || 120
+    const ts = midiData.timeSignatures[0]
+    const beatsPerMeasure = ts.numerator
+    const beatDuration = 60 / bpm
+    const measureDuration = beatDuration * beatsPerMeasure
+
+    const startTime = (loop.startMeasure - 1) * measureDuration
+    const endTime = Math.min(
+      loop.endMeasure * measureDuration,
+      midiData.duration,
+    )
+
+    return { startTime, endTime }
+  }, [loop, midiData])
+
   // ===== 播放动画循环 =====
   useAnimationFrame(
     (timestamp, deltaTime) => {
@@ -165,7 +195,16 @@ export function usePlayback() {
       const playbackRate =
         storePlayback.bpm / Math.max(1, storePlayback.originalBpm)
       const prevTime = playbackState.currentTime
-      const newTime = prevTime + deltaTime * playbackRate
+      let newTime = prevTime + deltaTime * playbackRate
+
+      // 检查循环范围
+      const loopRange = getLoopTimeRange()
+      if (loopRange && newTime >= loopRange.endTime) {
+        // 循环回到开始
+        newTime = loopRange.startTime
+        playbackState.clearActiveKeys()
+        stopAllNotes()
+      }
 
       // 检查是否播放结束
       if (midiData && newTime >= midiData.duration) {
@@ -362,6 +401,83 @@ export function usePlayback() {
     }
   }, [])
 
+  // 主题变化时重新着色
+  const handleThemeChange = useCallback(
+    (newThemeId: string) => {
+      setThemeId(newThemeId)
+      recolorNotes(newThemeId)
+    },
+    [setThemeId, recolorNotes],
+  )
+
+  // 计算小节时间范围（用于循环）
+  const getMeasureTimeRange = useCallback(
+    (startMeasure: number, endMeasure: number) => {
+      if (!midiData?.timeSignatures || midiData.timeSignatures.length === 0) {
+        return null
+      }
+      const bpm = midiData.originalBpm || 120
+      const ts = midiData.timeSignatures[0]
+      const beatsPerMeasure = ts.numerator
+      const beatDuration = 60 / bpm
+      const measureDuration = beatDuration * beatsPerMeasure
+
+      const startTime = (startMeasure - 1) * measureDuration
+      const endTime = endMeasure * measureDuration
+
+      return { startTime, endTime: Math.min(endTime, midiData.duration) }
+    },
+    [midiData],
+  )
+
+  // 获取总小节数
+  const getTotalMeasures = useCallback(() => {
+    if (!midiData?.timeSignatures || midiData.timeSignatures.length === 0) {
+      return 1
+    }
+    const bpm = midiData.originalBpm || 120
+    const ts = midiData.timeSignatures[0]
+    const beatsPerMeasure = ts.numerator
+    const beatDuration = 60 / bpm
+    const measureDuration = beatDuration * beatsPerMeasure
+
+    return Math.ceil(midiData.duration / measureDuration)
+  }, [midiData])
+
+  // 获取小节时长
+  const getMeasureDuration = useCallback(() => {
+    if (!midiData?.timeSignatures || midiData.timeSignatures.length === 0) {
+      return 2 // 默认 2 秒
+    }
+    const bpm = midiData.originalBpm || 120
+    const ts = midiData.timeSignatures[0]
+    const beatsPerMeasure = ts.numerator
+    const beatDuration = 60 / bpm
+    return beatDuration * beatsPerMeasure
+  }, [midiData])
+
+  // 按小节步进
+  const seekByMeasure = useCallback(
+    (direction: 1 | -1) => {
+      const measureDuration = getMeasureDuration()
+      const currentTime = playbackState.currentTime
+      const currentMeasure = Math.floor(currentTime / measureDuration)
+      const targetMeasure = currentMeasure + direction
+      const targetTime = Math.max(0, targetMeasure * measureDuration)
+
+      if (midiData) {
+        playbackState.setCurrentTime(Math.min(targetTime, midiData.duration))
+      } else {
+        playbackState.setCurrentTime(targetTime)
+      }
+
+      // 清除当前音符状态
+      playbackState.clearActiveKeys()
+      stopAllNotes()
+    },
+    [getMeasureDuration, midiData, stopAllNotes],
+  )
+
   return {
     // Refs
     containerRef,
@@ -378,6 +494,8 @@ export function usePlayback() {
     timeWindow,
     waterfallHeight,
     showHelp,
+    themeId,
+    loop,
 
     // Actions
     play: playWithCountdown,
@@ -396,6 +514,12 @@ export function usePlayback() {
     isLoading,
     isFullscreen,
     toggleFullscreen,
+    handleThemeChange,
+    toggleLoop,
+    setLoopRange,
+    getMeasureTimeRange,
+    getTotalMeasures,
+    seekByMeasure,
 
     // Layout
     PIXELS_PER_SECOND,

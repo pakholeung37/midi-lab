@@ -15,6 +15,12 @@ export interface ControlPanelProps {
   metronome: {
     enabled: boolean
   }
+  loop: {
+    enabled: boolean
+    startMeasure: number
+    endMeasure: number
+  }
+  totalMeasures: number
   onPlay: () => void
   onPause: () => void
   onStop: () => void
@@ -23,6 +29,8 @@ export interface ControlPanelProps {
   onToggleHelp: () => void
   onToggleCountdown: () => void
   onToggleMetronome: () => void
+  onToggleLoop: () => void
+  onLoopRangeChange: (start: number, end: number) => void
   showHelp: boolean
   isMuted: boolean
   midiVolume: number
@@ -37,6 +45,8 @@ export interface ControlPanelProps {
   hasMidiData?: boolean
   pixelsPerSecond: number
   onPixelsPerSecondChange: (value: number) => void
+  themeId: string
+  onThemeChange: (id: string) => void
 }
 
 export interface PlayControlsProps {
@@ -76,6 +86,8 @@ export interface SettingsPanelProps {
   tracks: TrackInfo[]
   pixelsPerSecond: number
   onPixelsPerSecondChange: (value: number) => void
+  themeId: string
+  onThemeChange: (id: string) => void
 }
 
 export interface TrackListProps {

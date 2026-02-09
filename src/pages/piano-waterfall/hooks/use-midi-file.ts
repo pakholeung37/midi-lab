@@ -7,14 +7,15 @@ import type {
   TimeSignature,
   KeySignature,
 } from '../types'
-import { getTrackColor } from '../utils/note-colors'
 import { NoteTimeIndex } from '../core/note-index'
+import { getThemeById, getThemeColor } from '../utils/themes'
 
 export interface UseMidiFileReturn {
   midiData: MidiFileData | null
   isLoading: boolean
   error: string | null
-  parseMidiFile: (file: File) => Promise<void>
+  parseMidiFile: (file: File, themeId?: string) => Promise<void>
+  recolorNotes: (themeId: string) => void
   clearMidiData: () => void
 }
 
@@ -23,7 +24,7 @@ export function useMidiFile(): UseMidiFileReturn {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const parseMidiFile = useCallback(async (file: File) => {
+  const parseMidiFile = useCallback(async (file: File, themeId = 'neon') => {
     setIsLoading(true)
     setError(null)
 
@@ -34,12 +35,15 @@ export function useMidiFile(): UseMidiFileReturn {
       // 解析 MIDI 文件
       const midi = new ToneMidi.Midi(arrayBuffer)
 
+      // 获取主题
+      const theme = getThemeById(themeId)
+
       // 转换为瀑布流音符
       const notes: WaterfallNote[] = []
       const tracks: TrackInfo[] = []
 
       midi.tracks.forEach((track, trackIndex) => {
-        const trackColor = getTrackColor(trackIndex)
+        const trackColor = getThemeColor(theme, trackIndex)
         const trackNotes = track.notes
 
         if (trackNotes.length > 0) {
@@ -129,6 +133,34 @@ export function useMidiFile(): UseMidiFileReturn {
     }
   }, [])
 
+  // 重新着色音符（主题变化时调用）
+  const recolorNotes = useCallback(
+    (themeId: string) => {
+      if (!midiData) return
+
+      const theme = getThemeById(themeId)
+      const newNotes = midiData.notes.map((note) => ({
+        ...note,
+        color: getThemeColor(theme, note.trackIndex),
+      }))
+      const newTracks = midiData.tracks.map((track) => ({
+        ...track,
+        color: getThemeColor(theme, track.index),
+      }))
+
+      // 重建索引
+      const noteIndex = new NoteTimeIndex(newNotes)
+
+      setMidiData({
+        ...midiData,
+        notes: newNotes,
+        tracks: newTracks,
+        noteIndex,
+      })
+    },
+    [midiData],
+  )
+
   const clearMidiData = useCallback(() => {
     setMidiData(null)
     setError(null)
@@ -139,6 +171,7 @@ export function useMidiFile(): UseMidiFileReturn {
     isLoading,
     error,
     parseMidiFile,
+    recolorNotes,
     clearMidiData,
   }
 }
