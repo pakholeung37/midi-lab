@@ -1,11 +1,14 @@
-import { useEffect, useMemo, useState, useRef } from 'react'
-import { WaterfallView } from './components/waterfall-view'
-import { ControlPanel } from './components/control-panel'
-import { MusicInfoOverlay } from './components/music-info-overlay'
-import { useWaterfallStore } from './hooks/use-waterfall-store'
-import { playbackState } from './core/playback-state'
-import { usePlayback } from './hooks/use-playback'
-import { calculatePianoLayout } from './utils/piano-layout'
+import { useEffect, useState, useRef } from 'react'
+import {
+  WaterfallCanvas,
+  ControlPanel,
+  MusicInfoOverlay,
+  usePlayback,
+  useWaterfallStore,
+  playbackState,
+} from '../../features/waterfall'
+import type { InstrumentLayout } from '../../features/waterfall'
+import { calculatePianoInstrument } from './piano-instrument'
 
 export function PianoWaterfallPage() {
   // 从 store 获取 UI 状态
@@ -35,7 +38,7 @@ export function PianoWaterfallPage() {
   // 容器引用
   const containerRef = useRef<HTMLDivElement>(null)
 
-  // 使用新的 playback hook
+  // 使用通用 playback hook
   const playbackHook = usePlayback()
 
   // 进度条实时更新的 currentTime
@@ -49,10 +52,9 @@ export function PianoWaterfallPage() {
     return unsubscribe
   }, [])
 
-  // 计算钢琴布局
-  const [pianoLayout, setPianoLayout] = useState<
-    ReturnType<typeof calculatePianoLayout>
-  >({ keys: [], scale: 1, totalWhiteKeys: 52 })
+  // 钢琴乐器布局
+  const [instrumentLayout, setInstrumentLayout] =
+    useState<InstrumentLayout | null>(null)
 
   // 计算布局
   useEffect(() => {
@@ -60,8 +62,8 @@ export function PianoWaterfallPage() {
 
     const updateLayout = () => {
       const width = containerRef.current?.clientWidth || 0
-      const layout = calculatePianoLayout(width)
-      setPianoLayout(layout)
+      const layout = calculatePianoInstrument(width)
+      setInstrumentLayout(layout)
       setCanvasSize(width, containerRef.current?.clientHeight || 0)
     }
 
@@ -75,18 +77,13 @@ export function PianoWaterfallPage() {
     return () => resizeObserver.disconnect()
   }, [setCanvasSize])
 
-  // 计算钢琴总宽度
-  const pianoWidth = useMemo(() => {
-    if (pianoLayout.keys.length === 0) return 0
-    const lastKey = pianoLayout.keys[pianoLayout.keys.length - 1]
-    return lastKey.x + lastKey.width
-  }, [pianoLayout.keys])
-
-  // 钢琴键盘高度
-  const pianoHeight = pianoLayout.keys[0]?.height || 0
-
   // 瀑布流实际高度
-  const actualWaterfallHeight = Math.max(0, canvasSize.height - pianoHeight)
+  const actualWaterfallHeight = instrumentLayout
+    ? Math.max(
+      0,
+      canvasSize.height - instrumentLayout.instrumentHeight,
+    )
+    : 0
 
   // 键盘快捷键
   useEffect(() => {
@@ -178,7 +175,8 @@ export function PianoWaterfallPage() {
         ref={containerRef}
         className="flex-1 relative overflow-hidden"
         style={{
-          background: 'linear-gradient(to bottom, #0f172a 0%, #020617 100%)',
+          background:
+            'linear-gradient(to bottom, #0f172a 0%, #020617 100%)',
         }}
       >
         {/* 加载中提示 */}
@@ -193,17 +191,19 @@ export function PianoWaterfallPage() {
           </div>
         )}
 
-        {/* 瀑布流和钢琴键盘统一视图 */}
-        {pianoLayout.keys.length > 0 && actualWaterfallHeight > 0 && (
+        {/* 瀑布流和乐器面板 */}
+        {instrumentLayout &&
+          instrumentLayout.keys.length > 0 &&
+          actualWaterfallHeight > 0 && (
           <div
             className="absolute inset-0 flex flex-col"
-            style={{ width: pianoWidth }}
+            style={{ width: instrumentLayout.totalWidth }}
           >
-            <WaterfallView
+            <WaterfallCanvas
               notes={midiData?.notes || []}
               noteIndex={midiData?.noteIndex}
-              keys={pianoLayout.keys}
-              width={pianoWidth}
+              layout={instrumentLayout}
+              width={instrumentLayout.totalWidth}
               height={canvasSize.height}
               pixelsPerSecond={pixelsPerSecond}
               keySignatures={midiData?.keySignatures}

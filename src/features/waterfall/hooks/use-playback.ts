@@ -1,6 +1,6 @@
-// 播放控制 Hook
-// 替代原来的 use-piano-waterfall.ts
+// 播放控制 Hook（通用版）
 // 负责协调动画循环、音频播放和状态更新
+// 不包含任何乐器特有逻辑
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useWaterfallStore } from './use-waterfall-store'
@@ -8,20 +8,13 @@ import { playbackState } from '../core/playback-state'
 import { useMidiFile } from './use-midi-file'
 import { useMidiInput } from './use-midi-input'
 import { useAudio } from './use-audio'
-import { calculatePianoLayout } from '../utils/piano-layout'
 import { useAnimationFrame, PRIORITY } from './use-animation-frame'
-import type { PianoKeyLayout } from '../utils/piano-layout'
 import type { TimeSignature } from '../types'
 
 const PIXELS_PER_SECOND = 150
 
 export function usePlayback() {
-  const containerRef = useRef<HTMLDivElement>(null)
   const lastTimeRef = useRef<number>(0)
-  const pianoLayoutRef = useRef<{ keys: PianoKeyLayout[]; scale: number }>({
-    keys: [],
-    scale: 1,
-  })
 
   // 倒数计时器引用
   const countdownTimeoutRef = useRef<number | undefined>(undefined)
@@ -37,7 +30,6 @@ export function usePlayback() {
     metronomeVolume,
     countdown,
     metronome,
-    canvasSize,
     timeWindow,
     selectedMidiPath,
     setMidiData,
@@ -54,7 +46,6 @@ export function usePlayback() {
     setCountdownBeat,
     stopCountdown,
     toggleMetronome,
-    setCanvasSize,
     showHelp,
     toggleHelp,
     themeId,
@@ -135,27 +126,6 @@ export function usePlayback() {
       loadMidiFromPath(selectedMidiPath)
     }
   }, [selectedMidiPath, midiData, loadMidiFromPath])
-
-  // 计算钢琴布局
-  useEffect(() => {
-    const updateLayout = () => {
-      if (containerRef.current) {
-        const width = containerRef.current.clientWidth
-        const layout = calculatePianoLayout(width)
-        pianoLayoutRef.current = layout
-        setCanvasSize(width, containerRef.current.clientHeight)
-      }
-    }
-
-    updateLayout()
-
-    const resizeObserver = new ResizeObserver(updateLayout)
-    if (containerRef.current) {
-      resizeObserver.observe(containerRef.current)
-    }
-
-    return () => resizeObserver.disconnect()
-  }, [setCanvasSize])
 
   // 更新 PlaybackState 的 BPM
   useEffect(() => {
@@ -508,10 +478,6 @@ export function usePlayback() {
   )
 
   return {
-    // Refs
-    containerRef,
-    pianoLayoutRef,
-
     // State
     midiData,
     playback: storePlayback,
@@ -519,7 +485,6 @@ export function usePlayback() {
     metronomeVolume,
     countdown,
     metronome,
-    canvasSize,
     timeWindow,
     waterfallHeight,
     showHelp,
