@@ -4,44 +4,36 @@
 
 import { useEffect, useRef, useCallback, useMemo } from 'react'
 import type {
-  WaterfallNote,
   ActiveKey,
   KeySignature,
-  TimeSignature,
 } from '../types'
 import type { InstrumentLayout, InstrumentKey } from '../instrument'
 
-import type { NoteTimeIndex } from '../core/note-index'
 import { playbackState } from '../core/playback-state'
 import { animationLoop, PRIORITY } from '../core/animation-loop'
 import { drawRoundRectPath } from '../utils/draw-utils-optimized'
 import { getScalePitchClasses, isOutOfKey } from '../utils/music-theory'
 import { getBeatsInRange } from '../utils/beat-grid'
 import { colorToRgba } from '../utils/color-cache'
+import { useWaterfallStore } from '../hooks/use-waterfall-store'
 
 interface WaterfallCanvasProps {
-  notes: WaterfallNote[]
-  noteIndex?: NoteTimeIndex
   layout: InstrumentLayout
   width: number
   height: number
-  pixelsPerSecond: number
-  keySignatures?: KeySignature[]
-  timeSignatures?: TimeSignature[]
-  originalBpm?: number
 }
 
 export function WaterfallCanvas({
-  notes,
-  noteIndex,
   layout,
   width,
   height,
-  pixelsPerSecond,
-  keySignatures = [],
-  timeSignatures = [],
-  originalBpm = 120,
 }: WaterfallCanvasProps) {
+  const { midiData, pixelsPerSecond } = useWaterfallStore()
+  const notes = midiData?.notes || []
+  const noteIndex = midiData?.noteIndex
+  const keySignatures = midiData?.keySignatures || []
+  const timeSignatures = midiData?.timeSignatures || []
+  const originalBpm = midiData?.originalBpm || 120
   // 双层 canvas 引用
   const noteCanvasRef = useRef<HTMLCanvasElement>(null)
   const instrumentCanvasRef = useRef<HTMLCanvasElement>(null)

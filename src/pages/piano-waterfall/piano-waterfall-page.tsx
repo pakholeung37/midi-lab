@@ -1,56 +1,25 @@
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import {
   WaterfallCanvas,
   ControlPanel,
   MusicInfoOverlay,
   usePlayback,
   useWaterfallStore,
-  playbackState,
 } from '../../features/waterfall'
 import type { InstrumentLayout } from '../../features/waterfall'
 import { calculatePianoInstrument } from './piano-instrument'
 
 export function PianoWaterfallPage() {
-  // 从 store 获取 UI 状态
   const {
-    midiData,
     playback,
-    audio,
-    metronomeVolume,
-    countdown,
-    metronome,
     canvasSize,
     showHelp,
-    pixelsPerSecond,
-    themeId,
-    loop,
     setBpm,
-    toggleMute,
-    setVolume,
-    setMetronomeVolume: setStoreMetronomeVolume,
-    toggleCountdown,
-    toggleMetronome,
-    toggleHelp,
     setCanvasSize,
-    setPixelsPerSecond,
   } = useWaterfallStore()
 
-  // 容器引用
   const containerRef = useRef<HTMLDivElement>(null)
-
-  // 使用通用 playback hook
   const playbackHook = usePlayback()
-
-  // 进度条实时更新的 currentTime
-  const [displayTime, setDisplayTime] = useState(0)
-
-  // 订阅 playbackState 以实时更新进度条
-  useEffect(() => {
-    const unsubscribe = playbackState.subscribe(() => {
-      setDisplayTime(playbackState.currentTime)
-    })
-    return unsubscribe
-  }, [])
 
   // 钢琴乐器布局
   const [instrumentLayout, setInstrumentLayout] =
@@ -130,45 +99,7 @@ export function PianoWaterfallPage() {
   return (
     <div className="flex flex-col h-screen w-screen bg-slate-950 overflow-hidden">
       {/* 悬浮控制栏 */}
-      <ControlPanel
-        isPlaying={playback.isPlaying}
-        currentTime={displayTime}
-        duration={midiData?.duration || 0}
-        bpm={playback.bpm}
-        originalBpm={playback.originalBpm}
-        tracks={midiData?.tracks || []}
-        countdown={countdown}
-        metronome={metronome}
-        loop={loop}
-        totalMeasures={playbackHook.getTotalMeasures()}
-        onPlay={playbackHook.play}
-        onPause={playbackHook.pause}
-        onStop={playbackHook.handleStop}
-        onSeek={(time) => playbackState.setCurrentTime(time)}
-        onBpmChange={setBpm}
-        onToggleHelp={toggleHelp}
-        onToggleCountdown={toggleCountdown}
-        onToggleMetronome={toggleMetronome}
-        onToggleLoop={playbackHook.toggleLoop}
-        onLoopRangeChange={playbackHook.setLoopRange}
-        showHelp={showHelp}
-        isMuted={audio.isMuted}
-        midiVolume={audio.volume}
-        metronomeVolume={metronomeVolume}
-        onToggleMute={toggleMute}
-        onMidiVolumeChange={setVolume}
-        onMetronomeVolumeChange={setStoreMetronomeVolume}
-        isFullscreen={playbackHook.isFullscreen}
-        onToggleFullscreen={playbackHook.toggleFullscreen}
-        onFileSelect={playbackHook.handleFileSelect}
-        onMidiSelect={playbackHook.loadMidiFromPath}
-        selectedMidiPath={playbackHook.selectedMidiPath}
-        hasMidiData={!!midiData}
-        pixelsPerSecond={pixelsPerSecond}
-        onPixelsPerSecondChange={setPixelsPerSecond}
-        themeId={themeId}
-        onThemeChange={playbackHook.handleThemeChange}
-      />
+      <ControlPanel />
 
       {/* 主画布区域 */}
       <div
@@ -200,28 +131,15 @@ export function PianoWaterfallPage() {
             style={{ width: instrumentLayout.totalWidth }}
           >
             <WaterfallCanvas
-              notes={midiData?.notes || []}
-              noteIndex={midiData?.noteIndex}
               layout={instrumentLayout}
               width={instrumentLayout.totalWidth}
               height={canvasSize.height}
-              pixelsPerSecond={pixelsPerSecond}
-              keySignatures={midiData?.keySignatures}
-              timeSignatures={midiData?.timeSignatures}
-              originalBpm={midiData?.originalBpm}
             />
           </div>
         )}
 
         {/* 乐曲信息 overlay */}
-        {midiData && (
-          <MusicInfoOverlay
-            name={midiData.name}
-            timeSignatures={midiData.timeSignatures}
-            keySignatures={midiData.keySignatures}
-            currentTime={displayTime}
-          />
-        )}
+        <MusicInfoOverlay />
 
         {/* 帮助提示 */}
         {showHelp && (

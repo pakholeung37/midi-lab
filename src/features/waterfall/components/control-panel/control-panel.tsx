@@ -1,3 +1,7 @@
+// ControlPanel - 内部直接消费 store 和 playback
+// 不再需要外部透传大量 props
+
+import { useEffect, useState } from 'react'
 import * as Popover from '@radix-ui/react-popover'
 import { MdSettings, MdTimer, MdMusicNote } from 'react-icons/md'
 import { Button } from './button'
@@ -7,64 +11,62 @@ import { BpmControl } from './bpm-control'
 import { ChordDisplay } from './chord-display'
 import { LoopControl } from './loop-control'
 import { SettingsPanelContent } from './settings-panel'
-import type { ControlPanelProps } from './types'
+import { useWaterfallStore } from '../../hooks/use-waterfall-store'
+import { usePlayback } from '../../hooks/use-playback'
+import { playbackState } from '../../core/playback-state'
 
-export function ControlPanel({
-  isPlaying,
-  currentTime,
-  duration,
-  bpm,
-  originalBpm,
-  tracks,
-  countdown,
-  metronome,
-  loop,
-  totalMeasures,
-  onPlay,
-  onPause,
-  onStop,
-  onSeek,
-  onBpmChange,
-  onToggleHelp,
-  onToggleCountdown,
-  onToggleMetronome,
-  onToggleLoop,
-  onLoopRangeChange,
-  showHelp,
-  isMuted,
-  midiVolume,
-  metronomeVolume,
-  onToggleMute,
-  onMidiVolumeChange,
-  onMetronomeVolumeChange,
-  isFullscreen,
-  onToggleFullscreen,
-  onFileSelect,
-  onMidiSelect,
-  selectedMidiPath,
-  pixelsPerSecond,
-  onPixelsPerSecondChange,
-  themeId,
-  onThemeChange,
-}: ControlPanelProps) {
+export function ControlPanel() {
+  const {
+    midiData,
+    playback,
+    audio,
+    metronomeVolume,
+    countdown,
+    metronome,
+    showHelp,
+    pixelsPerSecond,
+    themeId,
+    loop,
+    setBpm,
+    toggleMute,
+    setVolume,
+    setMetronomeVolume,
+    toggleCountdown,
+    toggleMetronome,
+    toggleHelp,
+    setPixelsPerSecond,
+  } = useWaterfallStore()
+
+  const pb = usePlayback()
+
+  // 进度条实时更新的 currentTime
+  const [displayTime, setDisplayTime] = useState(0)
+
+  useEffect(() => {
+    const unsubscribe = playbackState.subscribe(() => {
+      setDisplayTime(playbackState.currentTime)
+    })
+    return unsubscribe
+  }, [])
+
   return (
     <div className="fixed top-3 left-1/2 -translate-x-1/2 z-50">
       <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-900/90 backdrop-blur-md border border-slate-700/50 shadow-xl">
         {/* 播放控制 */}
         <PlayControls
-          isPlaying={isPlaying}
+          isPlaying={playback.isPlaying}
           isCountingDown={countdown.isCountingDown}
           currentBeat={countdown.currentBeat}
-          onPlay={onPlay}
-          onPause={onPause}
-          onStop={onStop}
+          onPlay={pb.play}
+          onPause={pb.pause}
+          onStop={pb.handleStop}
         />
 
         {/* 进度条 */}
         <ProgressBar
-          currentTime={currentTime}
-          duration={duration}
-          onSeek={onSeek}
+          currentTime={displayTime}
+          duration={midiData?.duration || 0}
+          onSeek={(time) => playbackState.setCurrentTime(time)}
         />
 
         {/* 和弦显示 */}
@@ -75,16 +77,16 @@ export function ControlPanel({
 
         {/* BPM 显示/控制 */}
         <BpmControl
-          bpm={bpm}
-          originalBpm={originalBpm}
-          onBpmChange={onBpmChange}
+          bpm={playback.bpm}
+          originalBpm={playback.originalBpm}
+          onBpmChange={setBpm}
         />
         {/* 倒数开关 */}
         <Button
           size="sm"
           variant={countdown.enabled ? 'primary' : 'ghost'}
           icon={<MdTimer className="w-4 h-4" />}
-          onClick={onToggleCountdown}
+          onClick={toggleCountdown}
           title={countdown.enabled ? '倒数已启用' : '倒数已禁用'}
         />
 
@@ -93,16 +95,16 @@ export function ControlPanel({
           size="sm"
           variant={metronome.enabled ? 'primary' : 'ghost'}
           icon={<MdMusicNote className="w-4 h-4" />}
-          onClick={onToggleMetronome}
+          onClick={toggleMetronome}
           title={metronome.enabled ? '节拍器已启用' : '节拍器已禁用'}
         />
 
         {/* 小节循环 */}
         <LoopControl
           loop={loop}
-          totalMeasures={totalMeasures}
-          onToggleLoop={onToggleLoop}
-          onLoopRangeChange={onLoopRangeChange}
+          totalMeasures={pb.getTotalMeasures()}
+          onToggleLoop={pb.toggleLoop}
+          onLoopRangeChange={pb.setLoopRange}
         />
 
         {/* 设置按钮 - Radix Popover */}
@@ -123,24 +125,24 @@ export function ControlPanel({
               align="end"
             >
               <SettingsPanelContent
-                midiVolume={midiVolume}
+                midiVolume={audio.volume}
                 metronomeVolume={metronomeVolume}
-                isMuted={isMuted}
-                onMidiVolumeChange={onMidiVolumeChange}
-                onMetronomeVolumeChange={onMetronomeVolumeChange}
-                onToggleMute={onToggleMute}
+                isMuted={audio.isMuted}
+                onMidiVolumeChange={setVolume}
+                onMetronomeVolumeChange={setMetronomeVolume}
+                onToggleMute={toggleMute}
                 showHelp={showHelp}
-                onToggleHelp={onToggleHelp}
-                isFullscreen={isFullscreen}
-                onToggleFullscreen={onToggleFullscreen}
-                onFileSelect={onFileSelect}
-                onMidiSelect={onMidiSelect}
-                selectedMidiPath={selectedMidiPath}
-                tracks={tracks}
+                onToggleHelp={toggleHelp}
+                isFullscreen={pb.isFullscreen}
+                onToggleFullscreen={pb.toggleFullscreen}
+                onFileSelect={pb.handleFileSelect}
+                onMidiSelect={pb.loadMidiFromPath}
+                selectedMidiPath={pb.selectedMidiPath}
+                tracks={midiData?.tracks || []}
                 pixelsPerSecond={pixelsPerSecond}
-                onPixelsPerSecondChange={onPixelsPerSecondChange}
+                onPixelsPerSecondChange={setPixelsPerSecond}
                 themeId={themeId}
-                onThemeChange={onThemeChange}
+                onThemeChange={pb.handleThemeChange}
               />
             </Popover.Content>
           </Popover.Portal>

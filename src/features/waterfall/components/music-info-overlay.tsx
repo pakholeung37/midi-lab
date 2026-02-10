@@ -1,21 +1,26 @@
 // 乐曲信息显示组件（左上角 overlay）
 
+import { useEffect, useState } from 'react'
 import type { TimeSignature, KeySignature } from '../types'
 import { formatKeySignature, formatTimeSignature } from '../utils/music-theory'
+import { useWaterfallStore } from '../hooks/use-waterfall-store'
+import { playbackState } from '../core/playback-state'
 
-interface MusicInfoOverlayProps {
-  name: string
-  timeSignatures: TimeSignature[]
-  keySignatures: KeySignature[]
-  currentTime: number
-}
+export function MusicInfoOverlay() {
+  const { midiData } = useWaterfallStore()
+  const [currentTime, setCurrentTime] = useState(0)
 
-export function MusicInfoOverlay({
-  name,
-  timeSignatures,
-  keySignatures,
-  currentTime,
-}: MusicInfoOverlayProps) {
+  useEffect(() => {
+    const unsubscribe = playbackState.subscribe(() => {
+      setCurrentTime(playbackState.currentTime)
+    })
+    return unsubscribe
+  }, [])
+
+  if (!midiData) return null
+
+  const { name, timeSignatures, keySignatures } = midiData
+
   // 获取当前时间点的拍号（找最后一个 time <= currentTime 的）
   const currentTimeSignature = timeSignatures.reduce<TimeSignature | null>(
     (acc, ts) => (ts.time <= currentTime ? ts : acc),

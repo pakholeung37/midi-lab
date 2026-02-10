@@ -1,55 +1,5 @@
 import type { TrackInfo } from '../../types'
 
-export interface ControlPanelProps {
-  isPlaying: boolean
-  currentTime: number
-  duration: number
-  bpm: number
-  originalBpm: number
-  tracks: TrackInfo[]
-  countdown: {
-    enabled: boolean
-    isCountingDown: boolean
-    currentBeat: number
-  }
-  metronome: {
-    enabled: boolean
-  }
-  loop: {
-    enabled: boolean
-    startMeasure: number
-    endMeasure: number
-  }
-  totalMeasures: number
-  onPlay: () => void
-  onPause: () => void
-  onStop: () => void
-  onSeek: (time: number) => void
-  onBpmChange: (bpm: number) => void
-  onToggleHelp: () => void
-  onToggleCountdown: () => void
-  onToggleMetronome: () => void
-  onToggleLoop: () => void
-  onLoopRangeChange: (start: number, end: number) => void
-  showHelp: boolean
-  isMuted: boolean
-  midiVolume: number
-  metronomeVolume: number
-  onToggleMute: () => void
-  onMidiVolumeChange: (volume: number) => void
-  onMetronomeVolumeChange: (volume: number) => void
-  isFullscreen: boolean
-  onToggleFullscreen: () => void
-  onFileSelect?: (file: File) => void
-  onMidiSelect?: (path: string) => void
-  selectedMidiPath?: string | null
-  hasMidiData?: boolean
-  pixelsPerSecond: number
-  onPixelsPerSecondChange: (value: number) => void
-  themeId: string
-  onThemeChange: (id: string) => void
-}
-
 export interface PlayControlsProps {
   isPlaying: boolean
   isCountingDown: boolean
