@@ -5,8 +5,10 @@ import {
 } from '@tanstack/react-router'
 import { MainLayout } from './layouts/main-layout'
 import { GamepadController } from './pages/gamepad-controller/gamepad-controller'
+import { IntervalsEarTrainingPage } from './pages/ear-training-intervals/intervals-page'
 import { PianoWaterfallPage } from './pages/piano-waterfall/piano-waterfall-page'
 import {
+  EAR_TRAINING_INTERVALS_PROJECT,
   GAMEPAD_CONTROLLER_PROJECT,
   PIANO_WATERFALL_PROJECT,
 } from './projects'
@@ -48,10 +50,20 @@ export const pianoWaterfallRoute = createRoute({
   },
 })
 
+export const earTrainingIntervalsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: EAR_TRAINING_INTERVALS_PROJECT.path,
+  component: IntervalsEarTrainingPage,
+  staticData: {
+    title: EAR_TRAINING_INTERVALS_PROJECT.title,
+  },
+})
+
 const routeTree = rootRoute.addChildren([
   indexRoute,
   gamepadControllerRoute,
   pianoWaterfallRoute,
+  earTrainingIntervalsRoute,
 ])
 
 export const router = createRouter({ routeTree })
