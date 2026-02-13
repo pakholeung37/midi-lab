@@ -3,10 +3,13 @@ import {
   createRoute,
   createRouter,
 } from '@tanstack/react-router'
-import { Index } from './pages/index/index'
 import { MainLayout } from './layouts/main-layout'
 import { GamepadController } from './pages/gamepad-controller/gamepad-controller'
 import { PianoWaterfallPage } from './pages/piano-waterfall/piano-waterfall-page'
+import {
+  GAMEPAD_CONTROLLER_PROJECT,
+  PIANO_WATERFALL_PROJECT,
+} from './projects'
 
 declare module '@tanstack/react-router' {
   interface Register {
@@ -21,25 +24,27 @@ const rootRoute = createRootRoute({
 export const indexRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/',
-  component: Index,
+  component: PianoWaterfallPage,
+  staticData: {
+    title: PIANO_WATERFALL_PROJECT.title,
+  },
 })
 
 export const gamepadControllerRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: '/gamepad-controller',
+  path: GAMEPAD_CONTROLLER_PROJECT.path,
   component: GamepadController,
   staticData: {
-    title: 'Gamepad Controller',
+    title: GAMEPAD_CONTROLLER_PROJECT.title,
   },
 })
 
 export const pianoWaterfallRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: '/piano-waterfall',
+  path: PIANO_WATERFALL_PROJECT.path,
   component: PianoWaterfallPage,
   staticData: {
-    title: 'Piano Waterfall',
-    noLayout: true, // 这个页面不使用 MainLayout 的布局
+    title: PIANO_WATERFALL_PROJECT.title,
   },
 })
 

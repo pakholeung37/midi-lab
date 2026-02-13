@@ -34,7 +34,7 @@ export function MusicInfoOverlay() {
   )
 
   return (
-    <div className="absolute top-4 left-4 z-30 pointer-events-none">
+    <div className="absolute top-4 left-14 z-30 pointer-events-none">
       <div className="flex items-center gap-3 text-xs text-slate-400">
         {/* 文件名 */}
         <span className="truncate max-w-[180px]">{name}</span>
