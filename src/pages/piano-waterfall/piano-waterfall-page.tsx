@@ -99,7 +99,7 @@ export function PianoWaterfallPage() {
   return (
     <div className="flex flex-col h-screen w-screen bg-slate-950 overflow-hidden">
       {/* 悬浮控制栏 */}
-      <ControlPanel />
+      <ControlPanel playbackHook={playbackHook} />
 
       {/* 主画布区域 */}
       <div

@@ -12,10 +12,14 @@ import { ChordDisplay } from './chord-display'
 import { LoopControl } from './loop-control'
 import { SettingsPanelContent } from './settings-panel'
 import { useWaterfallStore } from '../../hooks/use-waterfall-store'
-import { usePlayback } from '../../hooks/use-playback'
+import type { usePlayback } from '../../hooks/use-playback'
 import { playbackState } from '../../core/playback-state'
 
-export function ControlPanel() {
+interface ControlPanelProps {
+  playbackHook: ReturnType<typeof usePlayback>
+}
+
+export function ControlPanel({ playbackHook: pb }: ControlPanelProps) {
   const {
     midiData,
     playback,
@@ -36,8 +40,6 @@ export function ControlPanel() {
     toggleHelp,
     setPixelsPerSecond,
   } = useWaterfallStore()
-
-  const pb = usePlayback()
 
   // 进度条实时更新的 currentTime
   const [displayTime, setDisplayTime] = useState(0)

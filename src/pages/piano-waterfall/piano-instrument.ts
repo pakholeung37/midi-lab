@@ -9,9 +9,7 @@ import {
   type PianoKeyLayout,
 } from './utils/piano-layout'
 
-export function calculatePianoInstrument(
-  totalWidth: number,
-): InstrumentLayout {
+export function calculatePianoInstrument(totalWidth: number): InstrumentLayout {
   const { keys } = calcLayout(totalWidth)
 
   const whiteKeys = keys.filter((k: PianoKeyLayout) => !k.isBlack)
@@ -134,7 +132,7 @@ function drawWhiteKey(
   }
   ctx.fill()
 
-  ctx.strokeStyle = isPressed ? highlightColor || '#666' : '#bbb'
+  ctx.strokeStyle = '#bbb'
   ctx.lineWidth = 1
   ctx.stroke()
 }
@@ -163,7 +161,7 @@ function drawBlackKey(
   }
   ctx.fill()
 
-  ctx.strokeStyle = isPressed ? highlightColor || '#444' : '#000'
+  ctx.strokeStyle = '#000'
   ctx.lineWidth = 1
   ctx.stroke()
 }
