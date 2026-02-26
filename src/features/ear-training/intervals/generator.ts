@@ -4,7 +4,7 @@ import {
   PIANO_MAX_MIDI,
   PIANO_MIN_MIDI,
 } from './constants'
-import type { IntervalPreset, IntervalQuestion } from './types'
+import type { IntervalMode, IntervalPreset, IntervalQuestion } from './types'
 
 interface GeneratorOptions {
   rootMinMidi?: number
@@ -16,8 +16,30 @@ function randomItem<T>(arr: readonly T[], rng: () => number): T {
   return arr[Math.floor(rng() * arr.length)]
 }
 
+type QuestionGenerationMode = Exclude<IntervalMode, 'melodic-mixed'>
+
+function resolveQuestionGenerationMode(
+  mode: IntervalMode,
+  rng: () => number,
+): QuestionGenerationMode {
+  if (mode !== 'melodic-mixed') {
+    return mode
+  }
+  return rng() < 0.5 ? 'melodic-asc' : 'melodic-desc'
+}
+
+function getTargetMidi(
+  rootMidi: number,
+  intervalSemitones: number,
+  mode: QuestionGenerationMode,
+): number {
+  return mode === 'melodic-desc'
+    ? rootMidi - intervalSemitones
+    : rootMidi + intervalSemitones
+}
+
 export function getCandidateRoots(
-  preset: IntervalPreset,
+  mode: QuestionGenerationMode,
   intervalSemitones: number,
   rootMinMidi = DEFAULT_ROOT_MIN_MIDI,
   rootMaxMidi = DEFAULT_ROOT_MAX_MIDI,
@@ -25,10 +47,7 @@ export function getCandidateRoots(
   const roots: number[] = []
 
   for (let rootMidi = rootMinMidi; rootMidi <= rootMaxMidi; rootMidi++) {
-    const targetMidi =
-      preset.mode === 'melodic-desc'
-        ? rootMidi - intervalSemitones
-        : rootMidi + intervalSemitones
+    const targetMidi = getTargetMidi(rootMidi, intervalSemitones, mode)
 
     if (targetMidi < PIANO_MIN_MIDI || targetMidi > PIANO_MAX_MIDI) {
       continue
@@ -51,8 +70,9 @@ export function generateIntervalQuestion(
   } = options
 
   const intervalSemitones = randomItem(preset.intervalSemitones, rng)
+  const generationMode = resolveQuestionGenerationMode(preset.mode, rng)
   const candidateRoots = getCandidateRoots(
-    preset,
+    generationMode,
     intervalSemitones,
     rootMinMidi,
     rootMaxMidi,
@@ -65,10 +85,7 @@ export function generateIntervalQuestion(
   }
 
   const rootMidi = randomItem(candidateRoots, rng)
-  const targetMidi =
-    preset.mode === 'melodic-desc'
-      ? rootMidi - intervalSemitones
-      : rootMidi + intervalSemitones
+  const targetMidi = getTargetMidi(rootMidi, intervalSemitones, generationMode)
 
   return {
     id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,

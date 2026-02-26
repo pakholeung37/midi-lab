@@ -9,6 +9,7 @@ interface StaffPromptProps {
 function getModeLabel(mode: IntervalMode): string {
   if (mode === 'melodic-asc') return 'melodic ascending'
   if (mode === 'melodic-desc') return 'melodic descending'
+  if (mode === 'melodic-mixed') return 'melodic ascending + descending'
   return 'harmonic'
 }
 

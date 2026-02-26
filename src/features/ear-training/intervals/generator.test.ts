@@ -27,6 +27,28 @@ describe('generateIntervalQuestion', () => {
     }
   })
 
+  it('generates mixed melodic intervals with both directions', () => {
+    const preset = getPresetById('seconds_melodic_mixed')
+    let hasAscending = false
+    let hasDescending = false
+
+    for (let i = 0; i < 100; i++) {
+      const question = generateIntervalQuestion(preset)
+      expect(preset.intervalSemitones).toContain(question.intervalSemitones)
+
+      const delta = question.targetMidi - question.rootMidi
+      expect(Math.abs(delta)).toBe(question.intervalSemitones)
+
+      if (delta > 0) hasAscending = true
+      if (delta < 0) hasDescending = true
+
+      if (hasAscending && hasDescending) break
+    }
+
+    expect(hasAscending).toBe(true)
+    expect(hasDescending).toBe(true)
+  })
+
   it('keeps notes inside the piano range for large intervals', () => {
     const preset = getPresetById('up_to_fifteenth_harmonic')
 
