@@ -14,6 +14,7 @@ export function PianoWaterfallPage() {
     playback,
     canvasSize,
     showHelp,
+    showPianoKeys,
     setBpm,
     setCanvasSize,
   } = useWaterfallStore()
@@ -31,7 +32,9 @@ export function PianoWaterfallPage() {
 
     const updateLayout = () => {
       const width = containerRef.current?.clientWidth || 0
-      const layout = calculatePianoInstrument(width)
+      const layout = calculatePianoInstrument(width, {
+        showKeys: showPianoKeys,
+      })
       setInstrumentLayout(layout)
       setCanvasSize(width, containerRef.current?.clientHeight || 0)
     }
@@ -44,14 +47,11 @@ export function PianoWaterfallPage() {
     }
 
     return () => resizeObserver.disconnect()
-  }, [setCanvasSize])
+  }, [setCanvasSize, showPianoKeys])
 
   // 瀑布流实际高度
   const actualWaterfallHeight = instrumentLayout
-    ? Math.max(
-      0,
-      canvasSize.height - instrumentLayout.instrumentHeight,
-    )
+    ? Math.max(0, canvasSize.height - instrumentLayout.instrumentHeight)
     : 0
 
   // 键盘快捷键
@@ -106,8 +106,7 @@ export function PianoWaterfallPage() {
         ref={containerRef}
         className="flex-1 relative overflow-hidden"
         style={{
-          background:
-            'linear-gradient(to bottom, #0f172a 0%, #020617 100%)',
+          background: 'linear-gradient(to bottom, #0f172a 0%, #020617 100%)',
         }}
       >
         {/* 加载中提示 */}
@@ -126,17 +125,17 @@ export function PianoWaterfallPage() {
         {instrumentLayout &&
           instrumentLayout.keys.length > 0 &&
           actualWaterfallHeight > 0 && (
-          <div
-            className="absolute inset-0 flex flex-col"
-            style={{ width: instrumentLayout.totalWidth }}
-          >
-            <WaterfallCanvas
-              layout={instrumentLayout}
-              width={instrumentLayout.totalWidth}
-              height={canvasSize.height}
-            />
-          </div>
-        )}
+            <div
+              className="absolute inset-0 flex flex-col"
+              style={{ width: instrumentLayout.totalWidth }}
+            >
+              <WaterfallCanvas
+                layout={instrumentLayout}
+                width={instrumentLayout.totalWidth}
+                height={canvasSize.height}
+              />
+            </div>
+          )}
 
         {/* 乐曲信息 overlay */}
         <MusicInfoOverlay />

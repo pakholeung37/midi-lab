@@ -30,6 +30,7 @@ export function ControlPanel({ playbackHook: pb }: ControlPanelProps) {
     showHelp,
     pixelsPerSecond,
     themeId,
+    showPianoKeys,
     loop,
     setBpm,
     toggleMute,
@@ -39,6 +40,7 @@ export function ControlPanel({ playbackHook: pb }: ControlPanelProps) {
     toggleMetronome,
     toggleHelp,
     setPixelsPerSecond,
+    togglePianoKeys,
   } = useWaterfallStore()
 
   // 进度条实时更新的 currentTime
@@ -145,6 +147,8 @@ export function ControlPanel({ playbackHook: pb }: ControlPanelProps) {
                 onPixelsPerSecondChange={setPixelsPerSecond}
                 themeId={themeId}
                 onThemeChange={pb.handleThemeChange}
+                showPianoKeys={showPianoKeys}
+                onTogglePianoKeys={togglePianoKeys}
               />
             </Popover.Content>
           </Popover.Portal>

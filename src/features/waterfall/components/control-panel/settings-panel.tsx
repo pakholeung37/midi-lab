@@ -33,6 +33,8 @@ export function SettingsPanelContent({
   onPixelsPerSecondChange,
   themeId,
   onThemeChange,
+  showPianoKeys,
+  onTogglePianoKeys,
 }: SettingsPanelProps) {
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -176,6 +178,17 @@ export function SettingsPanelContent({
           ))}
         </div>
       </div>
+
+      {/* 琴键显示开关 */}
+      <Button
+        onClick={onTogglePianoKeys}
+        variant={showPianoKeys ? 'default' : 'primary'}
+        size="lg"
+        active={!showPianoKeys}
+        className="w-full"
+      >
+        {showPianoKeys ? '隐藏琴键' : '显示琴键'}
+      </Button>
 
       {/* 帮助按钮 */}
       <Button

@@ -9,7 +9,15 @@ import {
   type PianoKeyLayout,
 } from './utils/piano-layout'
 
-export function calculatePianoInstrument(totalWidth: number): InstrumentLayout {
+interface PianoInstrumentOptions {
+  showKeys?: boolean
+}
+
+export function calculatePianoInstrument(
+  totalWidth: number,
+  options?: PianoInstrumentOptions,
+): InstrumentLayout {
+  const showKeys = options?.showKeys ?? true
   const { keys } = calcLayout(totalWidth)
 
   const whiteKeys = keys.filter((k: PianoKeyLayout) => !k.isBlack)
@@ -43,6 +51,8 @@ export function calculatePianoInstrument(totalWidth: number): InstrumentLayout {
       width: number,
       height: number,
     ) {
+      if (!showKeys) return
+
       const waterfallHeight = Math.max(0, height - instrumentHeight)
 
       // 白键

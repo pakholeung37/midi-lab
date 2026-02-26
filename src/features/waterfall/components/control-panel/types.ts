@@ -40,6 +40,8 @@ export interface SettingsPanelProps {
   onPixelsPerSecondChange: (value: number) => void
   themeId: string
   onThemeChange: (id: string) => void
+  showPianoKeys: boolean
+  onTogglePianoKeys: () => void
 }
 
 export interface TrackListProps {

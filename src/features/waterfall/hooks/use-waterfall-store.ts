@@ -40,6 +40,8 @@ interface WaterfallState {
   showHelp: boolean
   // 瀑布流主题 ID
   themeId: string
+  // 是否显示钢琴键盘
+  showPianoKeys: boolean
   // 小节循环状态
   loop: {
     enabled: boolean // 是否启用循环
@@ -84,6 +86,8 @@ interface WaterfallActions {
   toggleHelp: () => void
   // 主题
   setThemeId: (id: string) => void
+  // 钢琴键盘显示
+  togglePianoKeys: () => void
   // 循环控制
   toggleLoop: () => void
   setLoopRange: (start: number, end: number) => void
@@ -105,6 +109,7 @@ interface PersistedState {
   }
   showHelp: boolean
   themeId: string
+  showPianoKeys: boolean
   loop: {
     enabled: boolean
     startMeasure: number
@@ -139,6 +144,7 @@ const initialState: WaterfallState = {
   lookAheadTime: 2,
   showHelp: false,
   themeId: DEFAULT_THEME_ID,
+  showPianoKeys: true,
   loop: {
     enabled: false,
     startMeasure: 1,
@@ -256,6 +262,9 @@ export const useWaterfallStore = create<
 
       setThemeId: (id) => set({ themeId: id }),
 
+      togglePianoKeys: () =>
+        set((state) => ({ showPianoKeys: !state.showPianoKeys })),
+
       toggleLoop: () =>
         set((state) => ({
           loop: { ...state.loop, enabled: !state.loop.enabled },
@@ -285,6 +294,7 @@ export const useWaterfallStore = create<
         metronome: state.metronome,
         showHelp: state.showHelp,
         themeId: state.themeId,
+        showPianoKeys: state.showPianoKeys,
         loop: state.loop,
       }),
     },

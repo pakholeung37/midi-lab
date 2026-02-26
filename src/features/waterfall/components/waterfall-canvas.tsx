@@ -3,10 +3,7 @@
 // 通过 InstrumentLayout 接口支持不同乐器
 
 import { useEffect, useRef, useCallback, useMemo } from 'react'
-import type {
-  ActiveKey,
-  KeySignature,
-} from '../types'
+import type { ActiveKey, KeySignature } from '../types'
 import type { InstrumentLayout, InstrumentKey } from '../instrument'
 
 import { playbackState } from '../core/playback-state'
@@ -28,7 +25,7 @@ export function WaterfallCanvas({
   width,
   height,
 }: WaterfallCanvasProps) {
-  const { midiData, pixelsPerSecond } = useWaterfallStore()
+  const { midiData, pixelsPerSecond, showPianoKeys } = useWaterfallStore()
   const notes = midiData?.notes || []
   const noteIndex = midiData?.noteIndex
   const keySignatures = midiData?.keySignatures || []
@@ -160,12 +157,17 @@ export function WaterfallCanvas({
     (ctx: CanvasRenderingContext2D, currentTime: number) => {
       const waterfallHeight = waterfallHeightRef.current
       if (waterfallHeight <= 0) return
+      const noteVisibleBottom = showPianoKeys ? waterfallHeight : height
 
       const scalePitchClasses = getScalePitchClassesAtTime(currentTime)
       const hasKeyInfo = scalePitchClasses.size > 0
 
       const timeWindow = waterfallHeight / pixelsPerSecond
-      const startTime = currentTime - 0.5
+      const hiddenZoneHeight = Math.max(0, height - waterfallHeight)
+      const pastTimeWindow = showPianoKeys
+        ? 0.5
+        : Math.max(0.5, hiddenZoneHeight / pixelsPerSecond + 0.35)
+      const startTime = currentTime - pastTimeWindow
       const endTime = currentTime + timeWindow
 
       const visibleNotes = noteIndex
@@ -188,7 +190,7 @@ export function WaterfallCanvas({
         const noteHeight = Math.max(4, note.duration * pixelsPerSecond)
         const noteTopY = noteBottomY - noteHeight
 
-        if (noteBottomY < 0 || noteTopY > waterfallHeight) continue
+        if (noteBottomY < 0 || noteTopY > noteVisibleBottom) continue
 
         const noteWidth = key.isBlack ? key.width * 0.9 : key.width * 0.85
         const noteX = key.x + (key.width - noteWidth) / 2
@@ -210,15 +212,13 @@ export function WaterfallCanvas({
           const noteHeight = Math.max(4, note.duration * pixelsPerSecond)
           const noteTopY = noteBottomY - noteHeight
 
-          if (noteBottomY < 0 || noteTopY > waterfallHeight) continue
+          if (noteBottomY < 0 || noteTopY > noteVisibleBottom) continue
 
           const noteWidth = key.isBlack ? key.width * 0.9 : key.width * 0.85
           const noteX = key.x + (key.width - noteWidth) / 2
 
           ctx.fillStyle = colorToRgba(note.color, 0.35)
-          drawRoundRectPath(
-            ctx, noteX, noteTopY, noteWidth, noteHeight, radius,
-          )
+          drawRoundRectPath(ctx, noteX, noteTopY, noteWidth, noteHeight, radius)
           ctx.fill()
         }
       }
@@ -237,8 +237,68 @@ export function WaterfallCanvas({
       keyMap,
       pixelsPerSecond,
       width,
+      height,
+      showPianoKeys,
       getScalePitchClassesAtTime,
     ],
+  )
+
+  const drawHiddenKeyboardHints = useCallback(
+    (
+      ctx: CanvasRenderingContext2D,
+      activeKeys: ReadonlyMap<number, ActiveKey>,
+      waterfallHeight: number,
+    ) => {
+      if (showPianoKeys) return
+
+      const hiddenZoneHeight = Math.max(0, height - waterfallHeight)
+      if (hiddenZoneHeight <= 0) return
+
+      const inputKeys = Array.from(activeKeys.values())
+        .filter((key) => key.source === 'input')
+        .sort((a, b) => a.midi - b.midi)
+      if (inputKeys.length === 0) return
+
+      const markerTop = waterfallHeight + 8
+      const markerHeight = Math.max(18, hiddenZoneHeight - 16)
+
+      for (const activeKey of inputKeys) {
+        const key = keyMap.get(activeKey.midi)
+        if (!key) continue
+
+        const accent = activeKey.color
+        const fill = colorToRgba(activeKey.color, 0.22)
+
+        const insetX = key.isBlack ? 1 : 2
+        const markerX = key.x + insetX
+        const markerWidth = Math.max(8, key.width - insetX * 2)
+
+        drawRoundRectPath(ctx, markerX, markerTop, markerWidth, markerHeight, 4)
+        ctx.fillStyle = fill
+        ctx.fill()
+        ctx.strokeStyle = accent
+        ctx.lineWidth = 1.5
+        ctx.stroke()
+
+        ctx.strokeStyle = accent
+        ctx.lineWidth = 2
+        ctx.beginPath()
+        ctx.moveTo(markerX, waterfallHeight - 2)
+        ctx.lineTo(markerX + markerWidth, waterfallHeight - 2)
+        ctx.stroke()
+
+        ctx.fillStyle = accent
+        ctx.font = '11px monospace'
+        ctx.textAlign = 'center'
+        ctx.textBaseline = 'middle'
+        ctx.fillText(
+          midiToNoteName(activeKey.midi),
+          key.x + key.width / 2,
+          markerTop + markerHeight / 2,
+        )
+      }
+    },
+    [showPianoKeys, height, keyMap],
   )
 
   // 完整绘制循环
@@ -263,11 +323,13 @@ export function WaterfallCanvas({
 
     // 绘制参考线（由乐器提供）
     if (layout.drawReferenceLines) {
-      layout.drawReferenceLines(noteCtx, waterfallHeight, width)
+      const referenceLineHeight = showPianoKeys ? waterfallHeight : height
+      layout.drawReferenceLines(noteCtx, referenceLineHeight, width)
     }
 
     drawBeatGrid(noteCtx, currentTime, waterfallHeight)
     drawNotes(noteCtx, currentTime)
+    drawHiddenKeyboardHints(noteCtx, activeKeys, waterfallHeight)
 
     // === 静态层：仅在活跃键变化时更新 ===
     const activeKeysKey = serializeActiveKeys(activeKeys)
@@ -275,11 +337,17 @@ export function WaterfallCanvas({
       lastActiveKeysRef.current = activeKeysKey
       instrumentCtx.setTransform(dpr, 0, 0, dpr, 0, 0)
       instrumentCtx.clearRect(0, 0, width, height)
-      layout.drawInstrument(
-        instrumentCtx, activeKeys, width, height,
-      )
+      layout.drawInstrument(instrumentCtx, activeKeys, width, height)
     }
-  }, [width, height, layout, drawBeatGrid, drawNotes])
+  }, [
+    width,
+    height,
+    layout,
+    drawBeatGrid,
+    drawNotes,
+    drawHiddenKeyboardHints,
+    showPianoKeys,
+  ])
 
   // 订阅动画循环
   useEffect(() => {
@@ -327,13 +395,32 @@ export function WaterfallCanvas({
 }
 
 // 序列化活跃键用于脏检查
-function serializeActiveKeys(
-  keys: ReadonlyMap<number, ActiveKey>,
-): string {
+function serializeActiveKeys(keys: ReadonlyMap<number, ActiveKey>): string {
   if (keys.size === 0) return ''
   const arr: string[] = []
   for (const [midi, key] of keys) {
     arr.push(`${midi}:${key.color || ''}`)
   }
   return arr.sort().join(',')
+}
+
+const MIDI_NOTE_NAMES = [
+  'C',
+  'C#',
+  'D',
+  'D#',
+  'E',
+  'F',
+  'F#',
+  'G',
+  'G#',
+  'A',
+  'A#',
+  'B',
+] as const
+
+function midiToNoteName(midi: number): string {
+  const octave = Math.floor(midi / 12) - 1
+  const pitchClass = midi % 12
+  return `${MIDI_NOTE_NAMES[pitchClass]}${octave}`
 }
