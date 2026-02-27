@@ -9,6 +9,7 @@ import type {
 } from '../types'
 import { NoteTimeIndex } from '../core/note-index'
 import { getThemeById, getThemeColor } from '../utils/themes'
+import { mapVelocityNonLinear } from '../utils/velocity-visual'
 
 export interface UseMidiFileReturn {
   midiData: MidiFileData | null
@@ -63,6 +64,7 @@ export function useMidiFile(): UseMidiFileReturn {
               time: note.time,
               duration: note.duration,
               velocity: note.velocity,
+              visualVelocity: mapVelocityNonLinear(note.velocity),
               trackIndex,
               color: trackColor,
             })

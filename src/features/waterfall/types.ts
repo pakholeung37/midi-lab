@@ -20,6 +20,7 @@ export interface WaterfallNote {
   time: number // 开始时间（秒）
   duration: number // 持续时间（秒）
   velocity: number // 力度 0-1
+  visualVelocity?: number // 视觉力度（可选，0-1）
   trackIndex: number // 音轨索引
   color: string // 霓虹色
 }
