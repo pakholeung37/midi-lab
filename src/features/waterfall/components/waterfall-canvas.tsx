@@ -3,7 +3,7 @@
 // 通过 InstrumentLayout 接口支持不同乐器
 
 import { useEffect, useRef, useCallback, useMemo } from 'react'
-import type { ActiveKey, KeySignature } from '../types'
+import type { ActiveKey, KeySignature, WaterfallNote } from '../types'
 import type { InstrumentLayout, InstrumentKey } from '../instrument'
 
 import { playbackState } from '../core/playback-state'
@@ -20,6 +20,9 @@ interface WaterfallCanvasProps {
   width: number
   height: number
 }
+
+const CONNECTED_NOTE_GAP_PX = 2
+const CONNECTED_NOTE_EPSILON_SEC = 0.01
 
 export function WaterfallCanvas({
   layout,
@@ -178,6 +181,30 @@ export function WaterfallCanvas({
               note.time + note.duration >= startTime && note.time <= endTime,
           )
 
+      const connectedTailNoteIds = new Set<string>()
+      const notesByMidi = new Map<number, WaterfallNote[]>()
+
+      for (const note of visibleNotes) {
+        const midiNotes = notesByMidi.get(note.midi)
+        if (midiNotes) {
+          midiNotes.push(note)
+        } else {
+          notesByMidi.set(note.midi, [note])
+        }
+      }
+
+      for (const midiNotes of notesByMidi.values()) {
+        midiNotes.sort((a, b) => a.time - b.time)
+        for (let i = 0; i < midiNotes.length - 1; i++) {
+          const current = midiNotes[i]
+          const next = midiNotes[i + 1]
+          const endTime = current.time + current.duration
+          if (Math.abs(next.time - endTime) <= CONNECTED_NOTE_EPSILON_SEC) {
+            connectedTailNoteIds.add(current.id)
+          }
+        }
+      }
+
       const radius = 4
 
       // 绘制调内音
@@ -188,7 +215,11 @@ export function WaterfallCanvas({
 
         const timeOffset = note.time - currentTime
         const noteBottomY = waterfallHeight - timeOffset * pixelsPerSecond
-        const noteHeight = Math.max(4, note.duration * pixelsPerSecond)
+        const baseHeight = Math.max(4, note.duration * pixelsPerSecond)
+        const splitGap = connectedTailNoteIds.has(note.id)
+          ? Math.min(CONNECTED_NOTE_GAP_PX, Math.max(0, baseHeight - 2))
+          : 0
+        const noteHeight = baseHeight - splitGap
         const noteTopY = noteBottomY - noteHeight
 
         if (noteBottomY < 0 || noteTopY > noteVisibleBottom) continue
@@ -215,7 +246,11 @@ export function WaterfallCanvas({
 
           const timeOffset = note.time - currentTime
           const noteBottomY = waterfallHeight - timeOffset * pixelsPerSecond
-          const noteHeight = Math.max(4, note.duration * pixelsPerSecond)
+          const baseHeight = Math.max(4, note.duration * pixelsPerSecond)
+          const splitGap = connectedTailNoteIds.has(note.id)
+            ? Math.min(CONNECTED_NOTE_GAP_PX, Math.max(0, baseHeight - 2))
+            : 0
+          const noteHeight = baseHeight - splitGap
           const noteTopY = noteBottomY - noteHeight
 
           if (noteBottomY < 0 || noteTopY > noteVisibleBottom) continue
