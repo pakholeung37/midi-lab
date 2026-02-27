@@ -85,8 +85,8 @@ export class NoteTimeIndex {
       // 如果音符开始时间已经超过当前时间，后面的都不需要检查了
       if (note.time > currentTime) break
 
-      // 检查是否正在播放
-      if (currentTime <= note.time + note.duration) {
+      // 检查是否正在播放（结束时间为右开区间，避免边界重叠）
+      if (currentTime < note.time + note.duration) {
         result.push(note)
       }
     }

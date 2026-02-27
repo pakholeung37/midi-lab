@@ -9,12 +9,13 @@ import { useMidiFile } from './use-midi-file'
 import { useMidiInput } from './use-midi-input'
 import { useAudio } from './use-audio'
 import { useAnimationFrame, PRIORITY } from './use-animation-frame'
-import type { TimeSignature } from '../types'
+import type { TimeSignature, WaterfallNote } from '../types'
 
 const PIXELS_PER_SECOND = 150
 
 export function usePlayback() {
   const lastTimeRef = useRef<number>(0)
+  const activeWaterfallNotesRef = useRef<Map<number, string>>(new Map())
 
   // 倒数计时器引用
   const countdownTimeoutRef = useRef<number | undefined>(undefined)
@@ -79,6 +80,7 @@ export function usePlayback() {
       storePause()
       playbackState.setCurrentTime(0)
       playbackState.clearActiveKeys()
+      activeWaterfallNotesRef.current.clear()
       stopAllNotes()
 
       setMidiData(parsedMidiData)
@@ -143,6 +145,7 @@ export function usePlayback() {
           stopNote(midi)
         }
       }
+      activeWaterfallNotesRef.current.clear()
       stopAllNotes()
     }
   }, [storePlayback.isPlaying, stopNote, stopAllNotes])
@@ -186,6 +189,7 @@ export function usePlayback() {
         // 循环回到开始
         newTime = loopRange.startTime
         playbackState.clearActiveKeys()
+        activeWaterfallNotesRef.current.clear()
         stopAllNotes()
       }
 
@@ -194,6 +198,7 @@ export function usePlayback() {
         storePause()
         playbackState.setCurrentTime(midiData.duration)
         playbackState.clearActiveKeys()
+        activeWaterfallNotesRef.current.clear()
         stopAllNotes()
       } else {
         // 更新高频状态（不触发 React 重渲染）
@@ -219,36 +224,62 @@ export function usePlayback() {
 
       // 使用索引查询当前播放的音符 O(log n) 而不是 O(n)
       const playingNotes = midiData.noteIndex.getNotesAtTime(currentTime)
-
-      const currentActiveKeys = playbackState.getActiveKeys()
       const isMuted = audio.isMuted
+      const currentWaterfallNotes = activeWaterfallNotesRef.current
+      const nextNotesByMidi = new Map<number, WaterfallNote>()
 
-      // 移除过期的按键
-      for (const [midi, activeKey] of currentActiveKeys) {
-        if (activeKey.source === 'waterfall') {
-          const stillPlaying = playingNotes.some((n) => n.midi === midi)
-          if (!stillPlaying) {
-            playbackState.removeActiveKey(midi, 'waterfall')
-            if (!isMuted) {
-              stopNote(midi)
-            }
+      for (const note of playingNotes) {
+        const existing = nextNotesByMidi.get(note.midi)
+        if (
+          !existing ||
+          note.time > existing.time ||
+          (note.time === existing.time && note.id > existing.id)
+        ) {
+          nextNotesByMidi.set(note.midi, note)
+        }
+      }
+
+      // 同音高时按音符 id 跟踪，确保无缝衔接时也能触发下一音符
+      for (const [midi, currentNoteId] of currentWaterfallNotes) {
+        const nextNote = nextNotesByMidi.get(midi)
+
+        if (!nextNote) {
+          currentWaterfallNotes.delete(midi)
+          playbackState.removeActiveKey(midi, 'waterfall')
+          if (!isMuted) {
+            stopNote(midi)
+          }
+          continue
+        }
+
+        if (nextNote.id !== currentNoteId) {
+          currentWaterfallNotes.set(midi, nextNote.id)
+          playbackState.addActiveKey({
+            midi: nextNote.midi,
+            velocity: nextNote.velocity,
+            source: 'waterfall',
+            color: nextNote.color,
+          })
+          if (!isMuted) {
+            playNote(nextNote.midi, nextNote.velocity)
           }
         }
       }
 
-      // 添加新的按键
-      for (const note of playingNotes) {
-        // 使用 hasWaterfallKey 检查，避免合并后的 map 影响判断
-        if (!playbackState.hasWaterfallKey(note.midi)) {
-          playbackState.addActiveKey({
-            midi: note.midi,
-            velocity: note.velocity,
-            source: 'waterfall',
-            color: note.color,
-          })
-          if (!isMuted) {
-            playNote(note.midi, note.velocity)
-          }
+      for (const [midi, note] of nextNotesByMidi) {
+        if (currentWaterfallNotes.has(midi)) {
+          continue
+        }
+
+        currentWaterfallNotes.set(midi, note.id)
+        playbackState.addActiveKey({
+          midi: note.midi,
+          velocity: note.velocity,
+          source: 'waterfall',
+          color: note.color,
+        })
+        if (!isMuted) {
+          playNote(note.midi, note.velocity)
         }
       }
     },
@@ -358,6 +389,7 @@ export function usePlayback() {
     seek(0)
     playbackState.setCurrentTime(0)
     playbackState.clearActiveKeys()
+    activeWaterfallNotesRef.current.clear()
     stopAllNotes()
   }, [cancelCountdown, storePause, seek, stopAllNotes])
 
@@ -472,6 +504,7 @@ export function usePlayback() {
 
       // 清除当前音符状态
       playbackState.clearActiveKeys()
+      activeWaterfallNotesRef.current.clear()
       stopAllNotes()
     },
     [getMeasureDuration, midiData, stopAllNotes],
