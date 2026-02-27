@@ -22,8 +22,8 @@ describe('mapVelocityNonLinear', () => {
     }
   })
 
-  it('uses fixed range normalization + gamma 0.75 mapping', () => {
-    expect(mapVelocityNonLinear(0.575)).toBeCloseTo(0.594603, 5)
-    expect(mapVelocityNonLinear(0.64)).toBeCloseTo(0.681732, 5)
+  it('uses fixed range linear normalization mapping', () => {
+    expect(mapVelocityNonLinear(0.575)).toBeCloseTo(0.5, 5)
+    expect(mapVelocityNonLinear(0.64)).toBeCloseTo(0.6, 5)
   })
 })

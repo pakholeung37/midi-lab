@@ -11,7 +11,7 @@ import { animationLoop, PRIORITY } from '../core/animation-loop'
 import { drawRoundRectPath } from '../utils/draw-utils-optimized'
 import { getScalePitchClasses, isOutOfKey } from '../utils/music-theory'
 import { getBeatsInRange } from '../utils/beat-grid'
-import { colorToRgba, colorWithBrightness } from '../utils/color-cache'
+import { colorToRgba, colorWithHueShift } from '../utils/color-cache'
 import { mapVelocityNonLinear } from '../utils/velocity-visual'
 import { useWaterfallStore } from '../hooks/use-waterfall-store'
 
@@ -196,29 +196,14 @@ export function WaterfallCanvas({
         const noteWidth = key.isBlack ? key.width * 0.9 : key.width * 0.85
         const noteX = key.x + (key.width - noteWidth) / 2
 
-        const visualVelocity = mapVelocityNonLinear(note.velocity)
-        const brightness = 0.55 + visualVelocity * 0.45
-        const alpha = Math.max(0, Math.min(1, 0.3 + visualVelocity * 0.65))
-        const velocityColor = colorWithBrightness(note.color, brightness)
+        const visualVelocity =
+          note.visualVelocity ?? mapVelocityNonLinear(note.velocity)
+        const hueShift = (visualVelocity - 0.5) * 50
+        const velocityColor = colorWithHueShift(note.color, hueShift)
 
-        ctx.fillStyle = colorToRgba(velocityColor, alpha)
+        ctx.fillStyle = velocityColor
         drawRoundRectPath(ctx, noteX, noteTopY, noteWidth, noteHeight, radius)
         ctx.fill()
-
-        // 强音增加同色描边，拉开层次但不偏白
-        if (visualVelocity > 0.55) {
-          ctx.strokeStyle = colorToRgba(note.color, 0.08 + visualVelocity * 0.35)
-          ctx.lineWidth = key.isBlack ? 0.8 : 1
-          drawRoundRectPath(
-            ctx,
-            noteX + 0.5,
-            noteTopY + 0.5,
-            Math.max(0, noteWidth - 1),
-            Math.max(0, noteHeight - 1),
-            radius,
-          )
-          ctx.stroke()
-        }
       }
 
       // 绘制调外音（更浅的颜色）
@@ -238,13 +223,12 @@ export function WaterfallCanvas({
           const noteWidth = key.isBlack ? key.width * 0.9 : key.width * 0.85
           const noteX = key.x + (key.width - noteWidth) / 2
 
-          const visualVelocity = mapVelocityNonLinear(note.velocity)
-          const brightness = 0.55 + visualVelocity * 0.45
-          const baseAlpha = 0.3 + visualVelocity * 0.65
-          const alpha = Math.max(0, Math.min(1, baseAlpha * 0.6))
-          const velocityColor = colorWithBrightness(note.color, brightness)
+          const visualVelocity =
+            note.visualVelocity ?? mapVelocityNonLinear(note.velocity)
+          const hueShift = (visualVelocity - 0.5) * 50
+          const velocityColor = colorWithHueShift(note.color, hueShift)
 
-          ctx.fillStyle = colorToRgba(velocityColor, alpha)
+          ctx.fillStyle = velocityColor
           drawRoundRectPath(ctx, noteX, noteTopY, noteWidth, noteHeight, radius)
           ctx.fill()
         }
