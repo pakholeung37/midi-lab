@@ -12,11 +12,22 @@ import { calculatePianoInstrument } from './piano-instrument'
 export function PianoWaterfallPage() {
   const {
     playback,
+    audio,
     canvasSize,
     showHelp,
     showPianoKeys,
+    countdown,
+    metronome,
+    loop,
+    pixelsPerSecond,
     setBpm,
     setCanvasSize,
+    setPixelsPerSecond,
+    toggleCountdown,
+    toggleHelp,
+    toggleMute,
+    toggleMetronome,
+    togglePianoKeys,
   } = useWaterfallStore()
 
   const containerRef = useRef<HTMLDivElement>(null)
@@ -66,6 +77,7 @@ export function PianoWaterfallPage() {
 
       switch (e.code) {
         case 'Space':
+        case 'KeyK':
           e.preventDefault()
           if (playback.isPlaying) {
             playbackHook.pause()
@@ -73,11 +85,17 @@ export function PianoWaterfallPage() {
             playbackHook.play()
           }
           break
+        case 'KeyS':
+          e.preventDefault()
+          playbackHook.handleStop()
+          break
         case 'ArrowLeft':
+        case 'KeyJ':
           e.preventDefault()
           playbackHook.seekByMeasure(-1)
           break
         case 'ArrowRight':
+        case 'KeyL':
           e.preventDefault()
           playbackHook.seekByMeasure(1)
           break
@@ -89,12 +107,72 @@ export function PianoWaterfallPage() {
           e.preventDefault()
           setBpm(Math.max(0, playback.bpm - 5))
           break
+        case 'Minus':
+          e.preventDefault()
+          setPixelsPerSecond(pixelsPerSecond - 25)
+          break
+        case 'Equal':
+          e.preventDefault()
+          setPixelsPerSecond(pixelsPerSecond + 25)
+          break
+        case 'KeyT':
+          if (e.repeat) return
+          e.preventDefault()
+          togglePianoKeys()
+          break
+        case 'KeyM':
+          if (e.repeat) return
+          e.preventDefault()
+          if (e.shiftKey) {
+            toggleMetronome()
+          } else {
+            toggleMute()
+          }
+          break
+        case 'KeyC':
+          if (e.repeat) return
+          e.preventDefault()
+          toggleCountdown()
+          break
+        case 'KeyR':
+          if (e.repeat) return
+          e.preventDefault()
+          playbackHook.toggleLoop()
+          break
+        case 'KeyF':
+          if (e.repeat) return
+          e.preventDefault()
+          playbackHook.toggleFullscreen()
+          break
+        case 'KeyH':
+          if (e.repeat) return
+          e.preventDefault()
+          toggleHelp()
+          break
+        case 'Slash':
+          if (e.shiftKey && !e.repeat) {
+            e.preventDefault()
+            toggleHelp()
+          }
+          break
       }
     }
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [playback.isPlaying, playback.bpm, playbackHook, setBpm])
+  }, [
+    playback.isPlaying,
+    playback.bpm,
+    playbackHook,
+    pixelsPerSecond,
+    setBpm,
+    setPixelsPerSecond,
+    togglePianoKeys,
+    toggleMute,
+    toggleMetronome,
+    toggleCountdown,
+    toggleHelp,
+  ])
 
   return (
     <div className="flex flex-col h-screen w-screen bg-slate-950 overflow-hidden">
@@ -142,18 +220,24 @@ export function PianoWaterfallPage() {
 
         {/* 帮助提示 */}
         {showHelp && (
-          <div className="fixed top-20 left-4 p-4 rounded-2xl bg-slate-900/95 backdrop-blur-md border border-slate-700/50 text-sm text-slate-300 max-w-xs z-40 shadow-2xl">
+          <div className="fixed top-20 left-4 p-4 rounded-2xl bg-slate-900/95 backdrop-blur-md border border-slate-700/50 text-sm text-slate-300 max-w-sm z-40 shadow-2xl">
             <h4 className="font-medium text-slate-100 mb-3">快捷键</h4>
             <ul className="space-y-2 text-xs">
               <li className="flex items-center justify-between">
                 <span className="px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 font-mono">
-                  Space
+                  Space / K
                 </span>
                 <span className="text-slate-500">播放/暂停</span>
               </li>
               <li className="flex items-center justify-between">
                 <span className="px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 font-mono">
-                  ← →
+                  S
+                </span>
+                <span className="text-slate-500">停止并回到开头</span>
+              </li>
+              <li className="flex items-center justify-between">
+                <span className="px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 font-mono">
+                  ← → / J L
                 </span>
                 <span className="text-slate-500">上/下一小节</span>
               </li>
@@ -162,6 +246,64 @@ export function PianoWaterfallPage() {
                   ↑ ↓
                 </span>
                 <span className="text-slate-500">调整 BPM</span>
+              </li>
+              <li className="flex items-center justify-between">
+                <span className="px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 font-mono">
+                  - / +
+                </span>
+                <span className="text-slate-500">瀑布流缩放</span>
+              </li>
+              <li className="flex items-center justify-between">
+                <span className="px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 font-mono">
+                  T
+                </span>
+                <span className="text-slate-500">
+                  {showPianoKeys ? '隐藏琴键' : '显示琴键'}
+                </span>
+              </li>
+              <li className="flex items-center justify-between">
+                <span className="px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 font-mono">
+                  M
+                </span>
+                <span className="text-slate-500">
+                  {audio.isMuted ? '取消静音' : '静音'}
+                </span>
+              </li>
+              <li className="flex items-center justify-between">
+                <span className="px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 font-mono">
+                  Shift + M
+                </span>
+                <span className="text-slate-500">
+                  {metronome.enabled ? '关闭节拍器' : '开启节拍器'}
+                </span>
+              </li>
+              <li className="flex items-center justify-between">
+                <span className="px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 font-mono">
+                  C
+                </span>
+                <span className="text-slate-500">
+                  {countdown.enabled ? '关闭倒数' : '开启倒数'}
+                </span>
+              </li>
+              <li className="flex items-center justify-between">
+                <span className="px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 font-mono">
+                  R
+                </span>
+                <span className="text-slate-500">
+                  {loop.enabled ? '关闭循环' : '开启循环'}
+                </span>
+              </li>
+              <li className="flex items-center justify-between">
+                <span className="px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 font-mono">
+                  F
+                </span>
+                <span className="text-slate-500">切换全屏</span>
+              </li>
+              <li className="flex items-center justify-between">
+                <span className="px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 font-mono">
+                  H / ?
+                </span>
+                <span className="text-slate-500">显示/隐藏帮助</span>
               </li>
             </ul>
           </div>
