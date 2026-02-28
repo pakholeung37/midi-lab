@@ -23,6 +23,8 @@ interface WaterfallCanvasProps {
 
 const CONNECTED_NOTE_GAP_PX = 2
 const CONNECTED_NOTE_EPSILON_SEC = 0.01
+const OUT_OF_KEY_ALPHA_SCALE = 0.6
+const OUT_OF_KEY_ALPHA_MIN = 0.18
 
 export function WaterfallCanvas({
   layout,
@@ -262,8 +264,13 @@ export function WaterfallCanvas({
             note.visualVelocity ?? mapVelocityNonLinear(note.velocity)
           const hueShift = (visualVelocity - 0.5) * 50
           const velocityColor = colorWithHueShift(note.color, hueShift)
+          const baseAlpha = 0.3 + visualVelocity * 0.65
+          const alpha = Math.max(
+            OUT_OF_KEY_ALPHA_MIN,
+            Math.min(1, baseAlpha * OUT_OF_KEY_ALPHA_SCALE),
+          )
 
-          ctx.fillStyle = velocityColor
+          ctx.fillStyle = colorToRgba(velocityColor, alpha)
           drawRoundRectPath(ctx, noteX, noteTopY, noteWidth, noteHeight, radius)
           ctx.fill()
         }
