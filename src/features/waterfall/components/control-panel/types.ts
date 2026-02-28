@@ -21,13 +21,16 @@ export interface BpmControlProps {
   onBpmChange: (bpm: number) => void
 }
 
-export interface SettingsPanelProps {
-  midiVolume: number
+export interface MasterVolumeControlProps {
+  volume: number
   metronomeVolume: number
   isMuted: boolean
-  onMidiVolumeChange: (volume: number) => void
+  onVolumeChange: (volume: number) => void
   onMetronomeVolumeChange: (volume: number) => void
   onToggleMute: () => void
+}
+
+export interface SettingsPanelProps {
   showHelp: boolean
   onToggleHelp: () => void
   isFullscreen: boolean

@@ -8,6 +8,7 @@ import { Button } from './button'
 import { PlayControls } from './play-controls'
 import { ProgressBar } from './progress-bar'
 import { BpmControl } from './bpm-control'
+import { MasterVolumeControl } from './master-volume-control'
 import { ChordDisplay } from './chord-display'
 import { LoopControl } from './loop-control'
 import { SettingsPanelContent } from './settings-panel'
@@ -85,6 +86,14 @@ export function ControlPanel({ playbackHook: pb }: ControlPanelProps) {
           originalBpm={playback.originalBpm}
           onBpmChange={setBpm}
         />
+        <MasterVolumeControl
+          volume={audio.volume}
+          metronomeVolume={metronomeVolume}
+          isMuted={audio.isMuted}
+          onVolumeChange={setVolume}
+          onMetronomeVolumeChange={setMetronomeVolume}
+          onToggleMute={toggleMute}
+        />
         {/* 倒数开关 */}
         <Button
           size="sm"
@@ -129,12 +138,6 @@ export function ControlPanel({ playbackHook: pb }: ControlPanelProps) {
               align="end"
             >
               <SettingsPanelContent
-                midiVolume={audio.volume}
-                metronomeVolume={metronomeVolume}
-                isMuted={audio.isMuted}
-                onMidiVolumeChange={setVolume}
-                onMetronomeVolumeChange={setMetronomeVolume}
-                onToggleMute={toggleMute}
                 showHelp={showHelp}
                 onToggleHelp={toggleHelp}
                 isFullscreen={pb.isFullscreen}

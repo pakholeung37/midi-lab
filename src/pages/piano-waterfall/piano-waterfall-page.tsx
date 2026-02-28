@@ -9,6 +9,13 @@ import {
 import type { InstrumentLayout } from '../../features/waterfall'
 import { calculatePianoInstrument } from './piano-instrument'
 
+function getZoomShortcutStep(pixelsPerSecond: number): number {
+  if (pixelsPerSecond <= 30) return 2
+  if (pixelsPerSecond <= 80) return 5
+  if (pixelsPerSecond <= 200) return 10
+  return 20
+}
+
 export function PianoWaterfallPage() {
   const {
     playback,
@@ -109,11 +116,15 @@ export function PianoWaterfallPage() {
           break
         case 'Minus':
           e.preventDefault()
-          setPixelsPerSecond(pixelsPerSecond - 25)
+          setPixelsPerSecond(
+            pixelsPerSecond - getZoomShortcutStep(pixelsPerSecond),
+          )
           break
         case 'Equal':
           e.preventDefault()
-          setPixelsPerSecond(pixelsPerSecond + 25)
+          setPixelsPerSecond(
+            pixelsPerSecond + getZoomShortcutStep(pixelsPerSecond),
+          )
           break
         case 'KeyT':
           if (e.repeat) return

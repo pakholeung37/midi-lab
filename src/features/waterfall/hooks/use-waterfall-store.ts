@@ -251,7 +251,7 @@ export const useWaterfallStore = create<
       setCanvasSize: (width, height) => set({ canvasSize: { width, height } }),
 
       setPixelsPerSecond: (value) =>
-        set({ pixelsPerSecond: Math.max(50, Math.min(400, value)) }),
+        set({ pixelsPerSecond: Math.max(5, Math.min(500, value)) }),
 
       setTimeWindow: (seconds) => set({ timeWindow: seconds }),
 
