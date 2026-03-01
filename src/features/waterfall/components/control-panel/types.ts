@@ -41,6 +41,10 @@ export interface SettingsPanelProps {
   tracks: TrackInfo[]
   pixelsPerSecond: number
   onPixelsPerSecondChange: (value: number) => void
+  transposeSemitones: number
+  onTransposeSemitonesChange: (value: number) => void
+  horizontalScale: number
+  onHorizontalScaleChange: (value: number) => void
   themeId: string
   onThemeChange: (id: string) => void
   showPianoKeys: boolean

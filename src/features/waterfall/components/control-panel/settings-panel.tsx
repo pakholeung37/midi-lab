@@ -24,6 +24,10 @@ export function SettingsPanelContent({
   tracks,
   pixelsPerSecond,
   onPixelsPerSecondChange,
+  transposeSemitones,
+  onTransposeSemitonesChange,
+  horizontalScale,
+  onHorizontalScaleChange,
   themeId,
   onThemeChange,
   showPianoKeys,
@@ -33,19 +37,19 @@ export function SettingsPanelContent({
 
   return (
     <div className="w-56 p-3 space-y-3">
-      <h3 className="text-xs font-medium text-slate-300">设置</h3>
+      <h3 className="text-xs font-medium text-slate-300">Settings</h3>
 
-      {/* MIDI 文件选择 */}
+      {/* MIDI file selection */}
       {midiFiles.length > 0 && (
         <div className="space-y-1.5">
-          <span className="text-xs text-slate-400">MIDI 文件</span>
+          <span className="text-xs text-slate-400">MIDI File</span>
           <select
             value={selectedMidiPath || ''}
             onChange={(e) => onMidiSelect?.(e.target.value)}
             className="w-full px-2 py-1.5 rounded-lg bg-slate-800 border border-slate-700 text-xs text-slate-200 focus:outline-none focus:ring-1 focus:ring-cyan-500"
           >
             <option value="" disabled>
-              选择文件...
+              Select file...
             </option>
             {midiFiles.map((file) => (
               <option key={file.path} value={file.path}>
@@ -56,17 +60,17 @@ export function SettingsPanelContent({
         </div>
       )}
 
-      {/* 上传 MIDI */}
+      {/* Upload MIDI */}
       <div className="flex gap-2">
         <Button
           onClick={() => fileInputRef.current?.click()}
           variant="default"
           size="lg"
           icon={<MdUpload className="w-3.5 h-3.5" />}
-          title="上传 MIDI 文件"
+          title="Upload MIDI file"
           className="flex-1"
         >
-          上传 MIDI
+          Upload MIDI
         </Button>
         <input
           ref={fileInputRef}
@@ -83,10 +87,10 @@ export function SettingsPanelContent({
         />
       </div>
 
-      {/* 瀑布流缩放 */}
+      {/* Vertical zoom */}
       <div className="space-y-1.5">
         <div className="flex items-center justify-between">
-          <span className="text-xs text-slate-400">瀑布流缩放</span>
+          <span className="text-xs text-slate-400">Vertical Zoom</span>
           <span className="text-xs text-slate-500 font-mono">
             {Math.round((pixelsPerSecond / 150) * 100)}%
           </span>
@@ -96,7 +100,7 @@ export function SettingsPanelContent({
             type="button"
             onClick={() => onPixelsPerSecondChange(pixelsPerSecond - 10)}
             className="p-1 rounded hover:bg-slate-700 text-slate-400 hover:text-slate-200 transition-colors"
-            title="缩小"
+            title="Zoom out"
           >
             <MdZoomOut className="w-4 h-4" />
           </button>
@@ -113,16 +117,120 @@ export function SettingsPanelContent({
             type="button"
             onClick={() => onPixelsPerSecondChange(pixelsPerSecond + 10)}
             className="p-1 rounded hover:bg-slate-700 text-slate-400 hover:text-slate-200 transition-colors"
-            title="放大"
+            title="Zoom in"
           >
             <MdZoomIn className="w-4 h-4" />
           </button>
         </div>
       </div>
 
-      {/* 颜色主题 */}
+      {/* Transpose */}
+      <div className="space-y-2">
+        <div className="flex items-center justify-between">
+          <span className="text-xs text-slate-400">Transpose</span>
+          <button
+            type="button"
+            onClick={() => onTransposeSemitonesChange(0)}
+            className={`
+              text-xs font-mono px-2 py-0.5 rounded border transition-colors
+              ${
+                transposeSemitones === 0
+                  ? 'text-slate-500 border-slate-700 bg-slate-800/40'
+                  : 'text-cyan-300 border-cyan-700/60 bg-cyan-500/10 hover:bg-cyan-500/20'
+              }
+            `}
+            title="Reset to zero"
+          >
+            {transposeSemitones > 0 ? `+${transposeSemitones}` : transposeSemitones} st
+          </button>
+        </div>
+        <div className="grid grid-cols-5 gap-1">
+          <button
+            type="button"
+            onClick={() => onTransposeSemitonesChange(transposeSemitones - 12)}
+            className="h-6 rounded bg-slate-800/70 text-[10px] text-slate-300 hover:bg-slate-700 transition-colors"
+            title="Down one octave"
+          >
+            -12
+          </button>
+          <button
+            type="button"
+            onClick={() => onTransposeSemitonesChange(transposeSemitones - 1)}
+            className="h-6 rounded bg-slate-800/70 text-[10px] text-slate-300 hover:bg-slate-700 transition-colors"
+            title="Down one semitone"
+          >
+            -1
+          </button>
+          <button
+            type="button"
+            onClick={() => onTransposeSemitonesChange(0)}
+            className="h-6 rounded bg-slate-700/80 text-[10px] text-slate-200 hover:bg-slate-600 transition-colors"
+            title="Reset"
+          >
+            0
+          </button>
+          <button
+            type="button"
+            onClick={() => onTransposeSemitonesChange(transposeSemitones + 1)}
+            className="h-6 rounded bg-slate-800/70 text-[10px] text-slate-300 hover:bg-slate-700 transition-colors"
+            title="Up one semitone"
+          >
+            +1
+          </button>
+          <button
+            type="button"
+            onClick={() => onTransposeSemitonesChange(transposeSemitones + 12)}
+            className="h-6 rounded bg-slate-800/70 text-[10px] text-slate-300 hover:bg-slate-700 transition-colors"
+            title="Up one octave"
+          >
+            +12
+          </button>
+        </div>
+        <div className="text-[10px] text-slate-500 text-center">
+          Range: -24 to +24 semitones
+        </div>
+      </div>
+
+      {/* Horizontal zoom */}
       <div className="space-y-1.5">
-        <span className="text-xs text-slate-400">颜色主题</span>
+        <div className="flex items-center justify-between">
+          <span className="text-xs text-slate-400">Horizontal Zoom</span>
+          <span className="text-xs text-slate-500 font-mono">
+            {Math.round(horizontalScale * 100)}%
+          </span>
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => onHorizontalScaleChange(horizontalScale - 0.05)}
+            className="p-1 rounded hover:bg-slate-700 text-slate-400 hover:text-slate-200 transition-colors"
+            title="Zoom out"
+          >
+            <MdZoomOut className="w-4 h-4" />
+          </button>
+          <input
+            type="range"
+            min={0.2}
+            max={3}
+            step={0.05}
+            value={horizontalScale}
+            onChange={(e) => onHorizontalScaleChange(Number(e.target.value))}
+            className="flex-1 h-1 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-cyan-500"
+          />
+          <button
+            type="button"
+            onClick={() => onHorizontalScaleChange(horizontalScale + 0.05)}
+            className="p-1 rounded hover:bg-slate-700 text-slate-400 hover:text-slate-200 transition-colors"
+            title="Zoom in"
+          >
+            <MdZoomIn className="w-4 h-4" />
+          </button>
+        </div>
+      </div>
+
+      {/* Color theme */}
+      <div className="space-y-1.5">
+        <span className="text-xs text-slate-400">Color Theme</span>
         <div className="grid grid-cols-4 gap-1.5">
           {THEMES.map((theme) => (
             <button
@@ -156,7 +264,7 @@ export function SettingsPanelContent({
         </div>
       </div>
 
-      {/* 琴键显示开关 */}
+      {/* Keyboard visibility toggle */}
       <Button
         onClick={onTogglePianoKeys}
         variant={showPianoKeys ? 'default' : 'primary'}
@@ -164,10 +272,10 @@ export function SettingsPanelContent({
         active={!showPianoKeys}
         className="w-full"
       >
-        {showPianoKeys ? '隐藏琴键' : '显示琴键'}
+        {showPianoKeys ? 'Hide Keyboard' : 'Show Keyboard'}
       </Button>
 
-      {/* 帮助按钮 */}
+      {/* Help button */}
       <Button
         onClick={onToggleHelp}
         variant={showHelp ? 'primary' : 'default'}
@@ -176,10 +284,10 @@ export function SettingsPanelContent({
         icon={<MdHelpOutline className="w-3.5 h-3.5" />}
         className="w-full"
       >
-        快捷键帮助
+        Keyboard Shortcuts
       </Button>
 
-      {/* 全屏按钮 */}
+      {/* Fullscreen button */}
       <Button
         onClick={onToggleFullscreen}
         variant="default"
@@ -193,10 +301,10 @@ export function SettingsPanelContent({
         }
         className="w-full"
       >
-        {isFullscreen ? '退出全屏' : '进入全屏'}
+        {isFullscreen ? 'Exit Fullscreen' : 'Enter Fullscreen'}
       </Button>
 
-      {/* 音轨信息 */}
+      {/* Track list */}
       <TrackList tracks={tracks} />
     </div>
   )

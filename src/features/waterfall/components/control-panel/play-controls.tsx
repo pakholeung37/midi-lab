@@ -26,7 +26,7 @@ export function PlayControls({
           size="sm"
           variant="default"
           icon={<MdStop className="w-3.5 h-3.5" />}
-          title="停止"
+          title="Stop"
         />
       </>
     )
@@ -45,7 +45,7 @@ export function PlayControls({
             <MdPlayArrow className="w-4 h-4" />
           )
         }
-        title={isPlaying ? '暂停' : '播放'}
+        title={isPlaying ? 'Pause' : 'Play'}
       />
 
       <Button
@@ -53,7 +53,7 @@ export function PlayControls({
         size="sm"
         variant="default"
         icon={<MdStop className="w-3.5 h-3.5" />}
-        title="停止"
+        title="Stop"
       />
     </>
   )

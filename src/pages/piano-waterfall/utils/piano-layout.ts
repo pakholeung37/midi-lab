@@ -69,7 +69,14 @@ export function getNoteName(midi: number): string {
 }
 
 // 计算所有钢琴键的布局
-export function calculatePianoLayout(totalWidth: number): {
+interface PianoLayoutOptions {
+  horizontalScale?: number
+}
+
+export function calculatePianoLayout(
+  totalWidth: number,
+  options?: PianoLayoutOptions,
+): {
   keys: PianoKeyLayout[]
   scale: number
   totalWhiteKeys: number
@@ -89,12 +96,14 @@ export function calculatePianoLayout(totalWidth: number): {
   // 根据可用宽度计算缩放比例
   const baseWhiteWidth = PIANO_CONFIG.WHITE_KEY_WIDTH
   const requiredWidth = whiteKeyCount * baseWhiteWidth
-  const scale = totalWidth / requiredWidth
+  const fitScale = totalWidth / requiredWidth
+  const horizontalScale = Math.max(0.2, Math.min(3, options?.horizontalScale ?? 1))
+  const scale = fitScale * horizontalScale
 
   const whiteKeyWidth = baseWhiteWidth * scale
   const blackKeyWidth = PIANO_CONFIG.BLACK_KEY_WIDTH * scale
-  const whiteKeyHeight = PIANO_CONFIG.WHITE_KEY_HEIGHT * scale
-  const blackKeyHeight = PIANO_CONFIG.BLACK_KEY_HEIGHT * scale
+  const whiteKeyHeight = PIANO_CONFIG.WHITE_KEY_HEIGHT * fitScale
+  const blackKeyHeight = PIANO_CONFIG.BLACK_KEY_HEIGHT * fitScale
 
   const keys: PianoKeyLayout[] = []
   let currentX = 0

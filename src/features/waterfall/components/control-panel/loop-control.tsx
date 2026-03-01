@@ -26,7 +26,7 @@ export function LoopControl({
           size="sm"
           variant={loop.enabled ? 'primary' : 'ghost'}
           icon={<MdRepeat className="w-4 h-4" />}
-          title={loop.enabled ? '循环已启用' : '循环已禁用'}
+          title={loop.enabled ? 'Loop enabled' : 'Loop disabled'}
         />
       </Popover.Trigger>
 
@@ -38,7 +38,7 @@ export function LoopControl({
         >
           <div className="space-y-2">
             <div className="flex items-center justify-between gap-4">
-              <span className="text-xs text-slate-300">小节循环</span>
+              <span className="text-xs text-slate-300">Measure Loop</span>
               <button
                 type="button"
                 onClick={onToggleLoop}
@@ -51,11 +51,11 @@ export function LoopControl({
                   }
                 `}
               >
-                {loop.enabled ? '开' : '关'}
+                {loop.enabled ? 'On' : 'Off'}
               </button>
             </div>
             <div className="flex items-center gap-2 text-xs">
-              <span className="text-slate-500">小节</span>
+              <span className="text-slate-500">Measure</span>
               <input
                 type="number"
                 min={1}

@@ -7,7 +7,7 @@ export function TrackList({ tracks }: TrackListProps) {
     <>
       <div className="h-px bg-slate-700/50 my-3" />
       <div>
-        <h4 className="text-xs font-medium text-slate-500 mb-2">音轨</h4>
+        <h4 className="text-xs font-medium text-slate-500 mb-2">Tracks</h4>
         <div className="space-y-1 max-h-28 overflow-y-auto">
           {tracks.map((track) => (
             <div key={track.index} className="flex items-center gap-2 text-xs">

@@ -13,6 +13,7 @@ import { getScalePitchClasses, isOutOfKey } from '../utils/music-theory'
 import { getBeatsInRange } from '../utils/beat-grid'
 import { colorToRgba, colorWithHueShift } from '../utils/color-cache'
 import { mapVelocityNonLinear } from '../utils/velocity-visual'
+import { transposeMidi } from '../utils/midi-transpose'
 import { useWaterfallStore } from '../hooks/use-waterfall-store'
 
 interface WaterfallCanvasProps {
@@ -31,7 +32,8 @@ export function WaterfallCanvas({
   width,
   height,
 }: WaterfallCanvasProps) {
-  const { midiData, pixelsPerSecond, showPianoKeys } = useWaterfallStore()
+  const { midiData, pixelsPerSecond, showPianoKeys, transposeSemitones } =
+    useWaterfallStore()
   const notes = midiData?.notes || []
   const noteIndex = midiData?.noteIndex
   const keySignatures = midiData?.keySignatures || []
@@ -211,7 +213,9 @@ export function WaterfallCanvas({
 
       // 绘制调内音
       for (const note of visibleNotes) {
-        const key = keyMap.get(note.midi)
+        const transposedMidi = transposeMidi(note.midi, transposeSemitones)
+        if (transposedMidi === null) continue
+        const key = keyMap.get(transposedMidi)
         if (!key) continue
         if (hasKeyInfo && isOutOfKey(note.midi, scalePitchClasses)) continue
 
@@ -242,7 +246,9 @@ export function WaterfallCanvas({
       // 绘制调外音（更浅的颜色）
       if (hasKeyInfo) {
         for (const note of visibleNotes) {
-          const key = keyMap.get(note.midi)
+          const transposedMidi = transposeMidi(note.midi, transposeSemitones)
+          if (transposedMidi === null) continue
+          const key = keyMap.get(transposedMidi)
           if (!key) continue
           if (!isOutOfKey(note.midi, scalePitchClasses)) continue
 
@@ -289,6 +295,7 @@ export function WaterfallCanvas({
       noteIndex,
       keyMap,
       pixelsPerSecond,
+      transposeSemitones,
       width,
       height,
       showPianoKeys,

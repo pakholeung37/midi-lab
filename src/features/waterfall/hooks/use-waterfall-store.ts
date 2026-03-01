@@ -32,6 +32,10 @@ interface WaterfallState {
   canvasSize: { width: number; height: number }
   // 瀑布流缩放（像素/秒）
   pixelsPerSecond: number
+  // 移调（半音）
+  transposeSemitones: number
+  // 水平缩放（键宽）
+  horizontalScale: number
   // 时间窗口 (秒) - 显示未来多少秒的音符
   timeWindow: number
   // 提前量 (秒) - 给用户准备时间
@@ -78,6 +82,10 @@ interface WaterfallActions {
   setCanvasSize: (width: number, height: number) => void
   // 瀑布流缩放
   setPixelsPerSecond: (value: number) => void
+  // 移调（半音）
+  setTransposeSemitones: (value: number) => void
+  // 水平缩放
+  setHorizontalScale: (value: number) => void
   // 时间窗口
   setTimeWindow: (seconds: number) => void
   // 提前量
@@ -98,6 +106,8 @@ interface PersistedState {
   audio: AudioState
   metronomeVolume: number
   pixelsPerSecond: number
+  transposeSemitones: number
+  horizontalScale: number
   selectedMidiPath: string | null
   countdown: {
     enabled: boolean
@@ -140,6 +150,8 @@ const initialState: WaterfallState = {
   },
   canvasSize: { width: 0, height: 0 },
   pixelsPerSecond: 150,
+  transposeSemitones: 0,
+  horizontalScale: 1,
   timeWindow: 4,
   lookAheadTime: 2,
   showHelp: false,
@@ -253,6 +265,12 @@ export const useWaterfallStore = create<
       setPixelsPerSecond: (value) =>
         set({ pixelsPerSecond: Math.max(5, Math.min(500, value)) }),
 
+      setTransposeSemitones: (value) =>
+        set({ transposeSemitones: Math.max(-24, Math.min(24, Math.round(value))) }),
+
+      setHorizontalScale: (value) =>
+        set({ horizontalScale: Math.max(0.2, Math.min(3, value)) }),
+
       setTimeWindow: (seconds) => set({ timeWindow: seconds }),
 
       setLookAheadTime: (seconds) =>
@@ -285,6 +303,8 @@ export const useWaterfallStore = create<
         audio: state.audio,
         metronomeVolume: state.metronomeVolume,
         pixelsPerSecond: state.pixelsPerSecond,
+        transposeSemitones: state.transposeSemitones,
+        horizontalScale: state.horizontalScale,
         selectedMidiPath: state.selectedMidiPath,
         countdown: {
           enabled: state.countdown.enabled,

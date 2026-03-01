@@ -23,13 +23,16 @@ export function PianoWaterfallPage() {
     canvasSize,
     showHelp,
     showPianoKeys,
+    horizontalScale,
     countdown,
     metronome,
     loop,
     pixelsPerSecond,
+    transposeSemitones,
     setBpm,
     setCanvasSize,
     setPixelsPerSecond,
+    setTransposeSemitones,
     toggleCountdown,
     toggleHelp,
     toggleMute,
@@ -52,6 +55,7 @@ export function PianoWaterfallPage() {
       const width = containerRef.current?.clientWidth || 0
       const layout = calculatePianoInstrument(width, {
         showKeys: showPianoKeys,
+        horizontalScale,
       })
       setInstrumentLayout(layout)
       setCanvasSize(width, containerRef.current?.clientHeight || 0)
@@ -65,7 +69,7 @@ export function PianoWaterfallPage() {
     }
 
     return () => resizeObserver.disconnect()
-  }, [setCanvasSize, showPianoKeys])
+  }, [setCanvasSize, showPianoKeys, horizontalScale])
 
   // 瀑布流实际高度
   const actualWaterfallHeight = instrumentLayout
@@ -126,6 +130,18 @@ export function PianoWaterfallPage() {
             pixelsPerSecond + getZoomShortcutStep(pixelsPerSecond),
           )
           break
+        case 'BracketLeft':
+          e.preventDefault()
+          setTransposeSemitones(
+            transposeSemitones - (e.shiftKey ? 12 : 1),
+          )
+          break
+        case 'BracketRight':
+          e.preventDefault()
+          setTransposeSemitones(
+            transposeSemitones + (e.shiftKey ? 12 : 1),
+          )
+          break
         case 'KeyT':
           if (e.repeat) return
           e.preventDefault()
@@ -176,8 +192,10 @@ export function PianoWaterfallPage() {
     playback.bpm,
     playbackHook,
     pixelsPerSecond,
+    transposeSemitones,
     setBpm,
     setPixelsPerSecond,
+    setTransposeSemitones,
     togglePianoKeys,
     toggleMute,
     toggleMetronome,
@@ -204,7 +222,7 @@ export function PianoWaterfallPage() {
             <div className="flex flex-col items-center gap-4">
               <div className="w-12 h-12 rounded-full border-4 border-cyan-400/30 border-t-cyan-400 animate-spin" />
               <span className="text-slate-400 text-sm">
-                正在加载 MIDI 文件...
+                Loading MIDI file...
               </span>
             </div>
           </div>
@@ -215,7 +233,7 @@ export function PianoWaterfallPage() {
           instrumentLayout.keys.length > 0 &&
           actualWaterfallHeight > 0 && (
             <div
-              className="absolute inset-0 flex flex-col"
+              className="absolute top-0 bottom-0 left-1/2 flex flex-col -translate-x-1/2"
               style={{ width: instrumentLayout.totalWidth }}
             >
               <WaterfallCanvas
@@ -232,44 +250,56 @@ export function PianoWaterfallPage() {
         {/* 帮助提示 */}
         {showHelp && (
           <div className="fixed top-20 left-4 p-4 rounded-2xl bg-slate-900/95 backdrop-blur-md border border-slate-700/50 text-sm text-slate-300 max-w-sm z-40 shadow-2xl">
-            <h4 className="font-medium text-slate-100 mb-3">快捷键</h4>
+            <h4 className="font-medium text-slate-100 mb-3">Shortcuts</h4>
             <ul className="space-y-2 text-xs">
               <li className="flex items-center justify-between">
                 <span className="px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 font-mono">
                   Space / K
                 </span>
-                <span className="text-slate-500">播放/暂停</span>
+                <span className="text-slate-500">Play / Pause</span>
               </li>
               <li className="flex items-center justify-between">
                 <span className="px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 font-mono">
                   S
                 </span>
-                <span className="text-slate-500">停止并回到开头</span>
+                <span className="text-slate-500">Stop and rewind</span>
               </li>
               <li className="flex items-center justify-between">
                 <span className="px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 font-mono">
                   ← → / J L
                 </span>
-                <span className="text-slate-500">上/下一小节</span>
+                <span className="text-slate-500">Prev / Next measure</span>
               </li>
               <li className="flex items-center justify-between">
                 <span className="px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 font-mono">
                   ↑ ↓
                 </span>
-                <span className="text-slate-500">调整 BPM</span>
+                <span className="text-slate-500">Adjust BPM</span>
               </li>
               <li className="flex items-center justify-between">
                 <span className="px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 font-mono">
                   - / +
                 </span>
-                <span className="text-slate-500">瀑布流缩放</span>
+                <span className="text-slate-500">Waterfall zoom</span>
+              </li>
+              <li className="flex items-center justify-between">
+                <span className="px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 font-mono">
+                  [ / ]
+                </span>
+                <span className="text-slate-500">Transpose ±1 semitone</span>
+              </li>
+              <li className="flex items-center justify-between">
+                <span className="px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 font-mono">
+                  Shift + [ / ]
+                </span>
+                <span className="text-slate-500">Transpose ±12 semitones</span>
               </li>
               <li className="flex items-center justify-between">
                 <span className="px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 font-mono">
                   T
                 </span>
                 <span className="text-slate-500">
-                  {showPianoKeys ? '隐藏琴键' : '显示琴键'}
+                  {showPianoKeys ? 'Hide keyboard' : 'Show keyboard'}
                 </span>
               </li>
               <li className="flex items-center justify-between">
@@ -277,7 +307,7 @@ export function PianoWaterfallPage() {
                   M
                 </span>
                 <span className="text-slate-500">
-                  {audio.isMuted ? '取消静音' : '静音'}
+                  {audio.isMuted ? 'Unmute' : 'Mute'}
                 </span>
               </li>
               <li className="flex items-center justify-between">
@@ -285,7 +315,7 @@ export function PianoWaterfallPage() {
                   Shift + M
                 </span>
                 <span className="text-slate-500">
-                  {metronome.enabled ? '关闭节拍器' : '开启节拍器'}
+                  {metronome.enabled ? 'Disable metronome' : 'Enable metronome'}
                 </span>
               </li>
               <li className="flex items-center justify-between">
@@ -293,7 +323,7 @@ export function PianoWaterfallPage() {
                   C
                 </span>
                 <span className="text-slate-500">
-                  {countdown.enabled ? '关闭倒数' : '开启倒数'}
+                  {countdown.enabled ? 'Disable countdown' : 'Enable countdown'}
                 </span>
               </li>
               <li className="flex items-center justify-between">
@@ -301,20 +331,20 @@ export function PianoWaterfallPage() {
                   R
                 </span>
                 <span className="text-slate-500">
-                  {loop.enabled ? '关闭循环' : '开启循环'}
+                  {loop.enabled ? 'Disable loop' : 'Enable loop'}
                 </span>
               </li>
               <li className="flex items-center justify-between">
                 <span className="px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 font-mono">
                   F
                 </span>
-                <span className="text-slate-500">切换全屏</span>
+                <span className="text-slate-500">Toggle fullscreen</span>
               </li>
               <li className="flex items-center justify-between">
                 <span className="px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 font-mono">
                   H / ?
                 </span>
-                <span className="text-slate-500">显示/隐藏帮助</span>
+                <span className="text-slate-500">Show / hide help</span>
               </li>
             </ul>
           </div>

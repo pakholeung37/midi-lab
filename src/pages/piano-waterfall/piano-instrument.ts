@@ -11,6 +11,7 @@ import {
 
 interface PianoInstrumentOptions {
   showKeys?: boolean
+  horizontalScale?: number
 }
 
 export function calculatePianoInstrument(
@@ -18,7 +19,8 @@ export function calculatePianoInstrument(
   options?: PianoInstrumentOptions,
 ): InstrumentLayout {
   const showKeys = options?.showKeys ?? true
-  const { keys } = calcLayout(totalWidth)
+  const horizontalScale = options?.horizontalScale ?? 1
+  const { keys } = calcLayout(totalWidth, { horizontalScale })
 
   const whiteKeys = keys.filter((k: PianoKeyLayout) => !k.isBlack)
   const blackKeys = keys.filter((k: PianoKeyLayout) => k.isBlack)

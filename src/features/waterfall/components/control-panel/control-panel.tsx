@@ -30,6 +30,8 @@ export function ControlPanel({ playbackHook: pb }: ControlPanelProps) {
     metronome,
     showHelp,
     pixelsPerSecond,
+    transposeSemitones,
+    horizontalScale,
     themeId,
     showPianoKeys,
     loop,
@@ -41,6 +43,8 @@ export function ControlPanel({ playbackHook: pb }: ControlPanelProps) {
     toggleMetronome,
     toggleHelp,
     setPixelsPerSecond,
+    setTransposeSemitones,
+    setHorizontalScale,
     togglePianoKeys,
   } = useWaterfallStore()
 
@@ -100,7 +104,7 @@ export function ControlPanel({ playbackHook: pb }: ControlPanelProps) {
           variant={countdown.enabled ? 'primary' : 'ghost'}
           icon={<MdTimer className="w-4 h-4" />}
           onClick={toggleCountdown}
-          title={countdown.enabled ? '倒数已启用' : '倒数已禁用'}
+          title={countdown.enabled ? 'Countdown enabled' : 'Countdown disabled'}
         />
 
         {/* 节拍器开关 */}
@@ -109,7 +113,7 @@ export function ControlPanel({ playbackHook: pb }: ControlPanelProps) {
           variant={metronome.enabled ? 'primary' : 'ghost'}
           icon={<MdMusicNote className="w-4 h-4" />}
           onClick={toggleMetronome}
-          title={metronome.enabled ? '节拍器已启用' : '节拍器已禁用'}
+          title={metronome.enabled ? 'Metronome enabled' : 'Metronome disabled'}
         />
 
         {/* 小节循环 */}
@@ -127,7 +131,7 @@ export function ControlPanel({ playbackHook: pb }: ControlPanelProps) {
               size="sm"
               variant="ghost"
               icon={<MdSettings className="w-4 h-4" />}
-              title="设置"
+              title="Settings"
             />
           </Popover.Trigger>
 
@@ -148,6 +152,10 @@ export function ControlPanel({ playbackHook: pb }: ControlPanelProps) {
                 tracks={midiData?.tracks || []}
                 pixelsPerSecond={pixelsPerSecond}
                 onPixelsPerSecondChange={setPixelsPerSecond}
+                transposeSemitones={transposeSemitones}
+                onTransposeSemitonesChange={setTransposeSemitones}
+                horizontalScale={horizontalScale}
+                onHorizontalScaleChange={setHorizontalScale}
                 themeId={themeId}
                 onThemeChange={pb.handleThemeChange}
                 showPianoKeys={showPianoKeys}

@@ -263,7 +263,7 @@ export function hasKeyModulation(keySignatures: KeySignature[]): boolean {
 /**
  * 获取调式的调内音（pitch class set）
  * @param key 调名，如 "C", "G", "Bb", "F#"
- * @param scale "major" 或 "minor"
+ * @param scale "major" or "minor"
  * @returns 调内音的 pitch class 集合（0-11）
  */
 export function getScalePitchClasses(
@@ -308,7 +308,7 @@ export function isOutOfKey(
 /**
  * 格式化调号显示
  * @param key 调名
- * @param scale "major" 或 "minor"
+ * @param scale "major" or "minor"
  * @returns 格式化的调号字符串，如 "C Major", "A minor"
  */
 export function formatKeySignature(

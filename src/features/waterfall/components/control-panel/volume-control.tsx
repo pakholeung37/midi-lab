@@ -23,7 +23,7 @@ export function VolumeControl({
               <MdVolumeUp className="w-3 h-3" />
             )}
             <span className="text-[10px]">
-              {isMuted ? '静音' : `${Math.round(volume * 100)}%`}
+              {isMuted ? 'Mute' : `${Math.round(volume * 100)}%`}
             </span>
           </button>
         )}

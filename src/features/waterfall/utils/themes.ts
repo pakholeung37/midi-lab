@@ -10,7 +10,7 @@ export interface WaterfallTheme {
 // 霓虹主题（默认）- 高对比度霓虹色，相邻色差明显
 const neonTheme: WaterfallTheme = {
   id: 'neon',
-  name: '霓虹',
+  name: 'Neon',
   colors: [
     '#FF0055', // 品红
     '#00FF88', // 青绿
@@ -28,7 +28,7 @@ const neonTheme: WaterfallTheme = {
 // 海洋主题 - 蓝绿色系，冷暖交替
 const oceanTheme: WaterfallTheme = {
   id: 'ocean',
-  name: '海洋',
+  name: 'Ocean',
   colors: [
     '#00E5FF', // 亮青
     '#2962FF', // 靛蓝
@@ -46,7 +46,7 @@ const oceanTheme: WaterfallTheme = {
 // 森林主题 - 绿色系，明暗交替
 const forestTheme: WaterfallTheme = {
   id: 'forest',
-  name: '森林',
+  name: 'Forest',
   colors: [
     '#00E676', // 亮绿
     '#AEEA00', // 柠檬黄
@@ -64,7 +64,7 @@ const forestTheme: WaterfallTheme = {
 // 火焰主题 - 红橙黄，温度渐变交替
 const fireTheme: WaterfallTheme = {
   id: 'fire',
-  name: '火焰',
+  name: 'Fire',
   colors: [
     '#FF1744', // 红
     '#FFEA00', // 黄
@@ -82,7 +82,7 @@ const fireTheme: WaterfallTheme = {
 // 紫霞主题 - 紫粉色系，饱和度交替
 const purpleTheme: WaterfallTheme = {
   id: 'purple',
-  name: '紫霞',
+  name: 'Violet',
   colors: [
     '#D500F9', // 亮紫
     '#FF4081', // 粉红
@@ -100,7 +100,7 @@ const purpleTheme: WaterfallTheme = {
 // 糖果主题 - 高饱和多彩，最大对比
 const candyTheme: WaterfallTheme = {
   id: 'candy',
-  name: '糖果',
+  name: 'Candy',
   colors: [
     '#FF1493', // 深粉
     '#00FF7F', // 春绿
@@ -118,7 +118,7 @@ const candyTheme: WaterfallTheme = {
 // 极光主题 - 梦幻渐变色
 const auroraTheme: WaterfallTheme = {
   id: 'aurora',
-  name: '极光',
+  name: 'Aurora',
   colors: [
     '#00FF87', // 春绿
     '#FF00E4', // 洋红
@@ -136,7 +136,7 @@ const auroraTheme: WaterfallTheme = {
 // 彩虹主题 - 完整光谱，最大区分
 const rainbowTheme: WaterfallTheme = {
   id: 'rainbow',
-  name: '彩虹',
+  name: 'Rainbow',
   colors: [
     '#FF0000', // 红
     '#00FF00', // 绿

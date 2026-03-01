@@ -85,7 +85,7 @@ export function FileDropZone({ onFileSelect, isLoading }: FileDropZoneProps) {
       {isLoading ? (
         <>
           <div className="w-12 h-12 rounded-full border-4 border-cyan-400/30 border-t-cyan-400 animate-spin" />
-          <span className="text-slate-400 text-sm">正在解析 MIDI 文件...</span>
+          <span className="text-slate-400 text-sm">Parsing MIDI file...</span>
         </>
       ) : (
         <>
@@ -94,9 +94,9 @@ export function FileDropZone({ onFileSelect, isLoading }: FileDropZoneProps) {
             <MdInsertDriveFile className="w-5 h-5 text-cyan-400 absolute -bottom-1 -right-1" />
           </div>
           <div className="text-center">
-            <p className="text-slate-200 font-medium">拖拽 MIDI 文件到此处</p>
-            <p className="text-slate-500 text-sm mt-1">或点击选择文件</p>
-            <p className="text-slate-600 text-xs mt-2">支持 .mid, .midi 格式</p>
+            <p className="text-slate-200 font-medium">Drag a MIDI file here</p>
+            <p className="text-slate-500 text-sm mt-1">or click to choose one</p>
+            <p className="text-slate-600 text-xs mt-2">Supports .mid and .midi</p>
           </div>
         </>
       )}

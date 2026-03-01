@@ -14,7 +14,7 @@ export function BpmControl({ bpm, originalBpm, onBpmChange }: BpmControlProps) {
             data-[state=open]:bg-cyan-500/20 data-[state=open]:text-cyan-400
             text-slate-400 hover:text-slate-300
           `}
-          title="调整 BPM"
+          title="Adjust BPM"
         >
           <MdSpeed className="w-3 h-3" />
           <span>{bpm}</span>
@@ -33,9 +33,9 @@ export function BpmControl({ bpm, originalBpm, onBpmChange }: BpmControlProps) {
               <button
                 onClick={() => onBpmChange(originalBpm)}
                 className="text-[10px] text-slate-600 hover:text-slate-400"
-                title="重置"
+                title="Reset"
               >
-                重置
+                Reset
               </button>
             </div>
           </div>

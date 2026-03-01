@@ -10,6 +10,7 @@ import { useMidiInput } from './use-midi-input'
 import { useAudio } from './use-audio'
 import { useAnimationFrame, PRIORITY } from './use-animation-frame'
 import type { TimeSignature, WaterfallNote } from '../types'
+import { transposeMidi } from '../utils/midi-transpose'
 
 const PIXELS_PER_SECOND = 150
 
@@ -32,6 +33,7 @@ export function usePlayback() {
     countdown,
     metronome,
     timeWindow,
+    transposeSemitones,
     selectedMidiPath,
     setMidiData,
     setSelectedMidiPath,
@@ -133,6 +135,18 @@ export function usePlayback() {
   useEffect(() => {
     playbackState.setBpm(storePlayback.bpm)
   }, [storePlayback.bpm])
+
+  // 移调变化时清理瀑布流音符，下一帧按新音高重建
+  useEffect(() => {
+    const activeKeys = playbackState.getActiveKeys()
+    for (const [midi, activeKey] of activeKeys) {
+      if (activeKey.source === 'waterfall') {
+        playbackState.removeActiveKey(midi, 'waterfall')
+        stopNote(midi)
+      }
+    }
+    activeWaterfallNotesRef.current.clear()
+  }, [transposeSemitones, stopNote])
 
   // 暂停时停止所有音符
   useEffect(() => {
@@ -240,50 +254,59 @@ export function usePlayback() {
       }
 
       // 同音高时按音符 id 跟踪，确保无缝衔接时也能触发下一音符
-      for (const [midi, currentNoteId] of currentWaterfallNotes) {
-        const nextNote = nextNotesByMidi.get(midi)
+      for (const [sourceMidi, currentNoteId] of currentWaterfallNotes) {
+        const nextNote = nextNotesByMidi.get(sourceMidi)
+        const transposedMidi = transposeMidi(sourceMidi, transposeSemitones)
 
-        if (!nextNote) {
-          currentWaterfallNotes.delete(midi)
-          playbackState.removeActiveKey(midi, 'waterfall')
+        if (!nextNote || transposedMidi === null) {
+          currentWaterfallNotes.delete(sourceMidi)
+          if (transposedMidi !== null) {
+            playbackState.removeActiveKey(transposedMidi, 'waterfall')
+          }
           if (!isMuted) {
-            stopNote(midi)
+            if (transposedMidi !== null) {
+              stopNote(transposedMidi)
+            }
           }
           continue
         }
 
         if (nextNote.id !== currentNoteId) {
-          currentWaterfallNotes.set(midi, nextNote.id)
+          currentWaterfallNotes.set(sourceMidi, nextNote.id)
           playbackState.addActiveKey({
-            midi: nextNote.midi,
+            midi: transposedMidi,
             velocity: nextNote.velocity,
             source: 'waterfall',
             color: nextNote.color,
           })
           if (!isMuted) {
-            playNote(nextNote.midi, nextNote.velocity)
+            playNote(transposedMidi, nextNote.velocity)
           }
         }
       }
 
-      for (const [midi, note] of nextNotesByMidi) {
-        if (currentWaterfallNotes.has(midi)) {
+      for (const [sourceMidi, note] of nextNotesByMidi) {
+        if (currentWaterfallNotes.has(sourceMidi)) {
+          continue
+        }
+        const transposedMidi = transposeMidi(sourceMidi, transposeSemitones)
+        if (transposedMidi === null) {
           continue
         }
 
-        currentWaterfallNotes.set(midi, note.id)
+        currentWaterfallNotes.set(sourceMidi, note.id)
         playbackState.addActiveKey({
-          midi: note.midi,
+          midi: transposedMidi,
           velocity: note.velocity,
           source: 'waterfall',
           color: note.color,
         })
         if (!isMuted) {
-          playNote(note.midi, note.velocity)
+          playNote(transposedMidi, note.velocity)
         }
       }
     },
-    [midiData, audio.isMuted, playNote, stopNote],
+    [midiData, audio.isMuted, transposeSemitones, playNote, stopNote],
   )
 
   // 节拍器：检测跨越节拍点并播放 click

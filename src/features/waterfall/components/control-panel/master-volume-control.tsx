@@ -23,7 +23,7 @@ export function MasterVolumeControl({
             data-[state=open]:bg-cyan-500/20 data-[state=open]:text-cyan-400
             text-slate-400 hover:text-slate-300
           `}
-          title="调整音量"
+          title="Adjust volume"
         >
           {isMuted ? (
             <MdVolumeOff className="w-3 h-3" />
@@ -41,7 +41,7 @@ export function MasterVolumeControl({
         >
           <div>
             <div className="flex items-center justify-between mb-2">
-              <span className="text-xs text-slate-500">MIDI 音量</span>
+              <span className="text-xs text-slate-500">MIDI Volume</span>
               <div className="flex items-center gap-2">
                 <span className="text-sm font-mono text-cyan-400">
                   {volumePercent}%
@@ -49,9 +49,9 @@ export function MasterVolumeControl({
                 <button
                   onClick={onToggleMute}
                   className="text-[10px] text-slate-600 hover:text-slate-400"
-                  title={isMuted ? '取消静音' : '静音'}
+                  title={isMuted ? 'Unmute' : 'Mute'}
                 >
-                  {isMuted ? '取消静音' : '静音'}
+                  {isMuted ? 'Unmute' : 'Mute'}
                 </button>
               </div>
             </div>
@@ -69,7 +69,7 @@ export function MasterVolumeControl({
               </Slider.Track>
               <Slider.Thumb
                 className="block w-3 h-3 bg-white rounded-full shadow-md hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
-                aria-label="MIDI 音量"
+                aria-label="MIDI Volume"
               />
             </Slider.Root>
 
@@ -81,7 +81,7 @@ export function MasterVolumeControl({
 
           <div>
             <div className="flex items-center justify-between mb-2">
-              <span className="text-xs text-slate-500">节拍器音量</span>
+              <span className="text-xs text-slate-500">Metronome Volume</span>
               <span className="text-sm font-mono text-cyan-400">
                 {Math.round(metronomeVolume * 100)}%
               </span>
@@ -100,7 +100,7 @@ export function MasterVolumeControl({
               </Slider.Track>
               <Slider.Thumb
                 className="block w-3 h-3 bg-white rounded-full shadow-md hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
-                aria-label="节拍器音量"
+                aria-label="Metronome Volume"
               />
             </Slider.Root>
 
