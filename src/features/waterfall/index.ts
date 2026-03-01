@@ -22,4 +22,5 @@ export type {
   AudioState,
   TimeSignature,
   KeySignature,
+  InferredTonality,
 } from './types'

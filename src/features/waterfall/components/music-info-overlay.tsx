@@ -5,6 +5,11 @@ import type { TimeSignature, KeySignature } from '../types'
 import { formatKeySignature, formatTimeSignature } from '../utils/music-theory'
 import { useWaterfallStore } from '../hooks/use-waterfall-store'
 import { playbackState } from '../core/playback-state'
+import { MdAutoAwesome } from 'react-icons/md'
+
+function formatShortKeyLabel(key: string, scale: 'major' | 'minor'): string {
+  return `${key} ${scale === 'major' ? 'Major' : 'minor'}`
+}
 
 export function MusicInfoOverlay() {
   const { midiData } = useWaterfallStore()
@@ -19,7 +24,7 @@ export function MusicInfoOverlay() {
 
   if (!midiData) return null
 
-  const { name, timeSignatures, keySignatures } = midiData
+  const { name, timeSignatures, keySignatures, inferredTonality } = midiData
 
   // 获取当前时间点的拍号（找最后一个 time <= currentTime 的）
   const currentTimeSignature = timeSignatures.reduce<TimeSignature | null>(
@@ -33,6 +38,47 @@ export function MusicInfoOverlay() {
     keySignatures[0] || null,
   )
 
+  const midiKey = currentKeySignature
+    ? formatShortKeyLabel(currentKeySignature.key, currentKeySignature.scale)
+    : null
+  const inferredKey = inferredTonality
+    ? formatShortKeyLabel(inferredTonality.key, inferredTonality.scale)
+    : null
+  const hasMismatch = Boolean(inferredKey && midiKey && inferredKey !== midiKey)
+
+  const keyLabel = (() => {
+    if (inferredKey) return `${inferredKey}`
+    if (midiKey) return `${midiKey}`
+    return 'Key --'
+  })()
+
+  const keyTitle = (() => {
+    if (hasMismatch && inferredTonality && currentKeySignature) {
+      return `Using inferred key ${formatKeySignature(
+        inferredTonality.key,
+        inferredTonality.scale,
+      )} (${Math.round(
+        inferredTonality.confidence * 100,
+      )}%), MIDI metadata says ${formatKeySignature(
+        currentKeySignature.key,
+        currentKeySignature.scale,
+      )}`
+    }
+    if (inferredTonality) {
+      return `Inferred ${formatKeySignature(
+        inferredTonality.key,
+        inferredTonality.scale,
+      )} (${Math.round(inferredTonality.confidence * 100)}%)`
+    }
+    if (currentKeySignature) {
+      return `MIDI ${formatKeySignature(
+        currentKeySignature.key,
+        currentKeySignature.scale,
+      )}`
+    }
+    return ''
+  })()
+
   return (
     <div className="absolute top-4 left-14 z-30 pointer-events-none">
       <div className="flex items-center gap-3 text-xs text-slate-400">
@@ -40,15 +86,17 @@ export function MusicInfoOverlay() {
         <span className="truncate max-w-[180px]">{name}</span>
 
         <span className="text-slate-600">·</span>
-
-        {/* 调号 */}
-        <span className="font-mono">
-          {currentKeySignature
-            ? formatKeySignature(
-                currentKeySignature.key,
-                currentKeySignature.scale,
-              )
-            : '--'}
+        <span
+          className="font-mono text-slate-300 pointer-events-auto cursor-help"
+          title={keyTitle}
+        >
+          {keyLabel}
+          {hasMismatch ? (
+            <MdAutoAwesome
+              className="inline-block ml-1 text-[11px] align-[-1px] text-amber-300"
+              aria-label="Inferred key"
+            />
+          ) : null}
         </span>
 
         <span className="text-slate-600">·</span>

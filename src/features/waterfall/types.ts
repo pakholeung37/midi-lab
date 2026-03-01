@@ -9,8 +9,14 @@ export interface TimeSignature {
 // 调号事件
 export interface KeySignature {
   time: number // 开始时间（秒）
-  key: string // 调名，如 "C", "G", "Bb", "F#"
+  key: string // 调主音，如 "C", "A", "Bb", "F#"
   scale: 'major' | 'minor' // 大调或小调
+}
+
+export interface InferredTonality {
+  key: string
+  scale: 'major' | 'minor'
+  confidence: number // 0-1
 }
 
 // 瀑布流音符
@@ -64,5 +70,6 @@ export interface MidiFileData {
   originalBpm: number // 原始 BPM
   timeSignatures: TimeSignature[] // 拍号变化
   keySignatures: KeySignature[] // 调号变化
+  inferredTonality: InferredTonality | null // 推断调性
   noteIndex?: import('./core/note-index').NoteTimeIndex // 时间索引（可选）
 }

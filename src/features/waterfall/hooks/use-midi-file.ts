@@ -10,6 +10,11 @@ import type {
 import { NoteTimeIndex } from '../core/note-index'
 import { getThemeById, getThemeColor } from '../utils/themes'
 import { mapVelocityNonLinear } from '../utils/velocity-visual'
+import {
+  hasKeyModulation,
+  inferTonality,
+  normalizeToneJsKeySignature,
+} from '../utils/music-theory'
 
 export interface UseMidiFileReturn {
   midiData: MidiFileData | null
@@ -18,6 +23,14 @@ export interface UseMidiFileReturn {
   parseMidiFile: (file: File, themeId?: string) => Promise<void>
   recolorNotes: (themeId: string) => void
   clearMidiData: () => void
+}
+
+function formatMidiDisplayName(fileName: string): string {
+  const baseName = fileName.replace(/\.midi?$/i, '')
+  return baseName
+    .replace(/[-_]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
 }
 
 export function useMidiFile(): UseMidiFileReturn {
@@ -109,10 +122,17 @@ export function useMidiFile(): UseMidiFileReturn {
       // 提取调号
       const keySignatures: KeySignature[] =
         midi.header.keySignatures?.map((ks) => ({
+          ...normalizeToneJsKeySignature(
+            ks.key,
+            ks.scale === 'minor' ? 'minor' : 'major',
+          ),
           time: midi.header.ticksToSeconds(ks.ticks),
-          key: ks.key,
-          scale: ks.scale as 'major' | 'minor',
         })) ?? []
+
+      // 如果 MIDI 明确包含转调，优先使用原始调号时间线，不做整首推断。
+      const inferredTonality = hasKeyModulation(keySignatures)
+        ? null
+        : inferTonality(notes)
 
       // 构建音符时间索引
       const noteIndex = new NoteTimeIndex(notes)
@@ -121,10 +141,11 @@ export function useMidiFile(): UseMidiFileReturn {
         notes,
         tracks,
         duration,
-        name: file.name.replace(/\.midi?$/i, ''),
+        name: formatMidiDisplayName(file.name),
         originalBpm,
         timeSignatures,
         keySignatures,
+        inferredTonality,
         noteIndex,
       })
     } catch (err) {
