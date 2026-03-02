@@ -1,51 +1,98 @@
-# MIDI Lab 🎹
+# MIDI Lab
 
-A collection of awesome Web MIDI experiments and tools for music creation and interaction.
+Web MIDI experiments for interactive music tools in the browser.
 
-Link: [https://midi-lab.vercel.app](https://midi-lab.vercel.app)
+Live demo: https://midi-lab.vercel.app
 
-## 🚀 Getting Started
+![Piano Waterfall screenshot](./docs/images/piano-waterfall-screenshot.jpg)
 
-### Prerequisites
+## What is included
 
-- Modern web browser with Web MIDI API support (Chrome, Edge, Opera)
-- MIDI device (keyboard, controller, etc.) - optional but recommended
-- Node.js (version 16 or higher)
+- **Piano Waterfall** (`/` and `/piano-waterfall`)
+  - MIDI file playback with a piano-roll style waterfall visualization
+  - Tempo, loop, metronome, transpose, zoom, and keyboard shortcuts
+  - Auto-discovery of `.mid/.midi` files from `public/`
+- **Gamepad Controller** (`/gamepad-controller`)
+  - Maps gamepad axes/triggers to MIDI CC and pitch bend
+  - Editable response curves for expression, modulation, and pitch bend
+- **Ear Training - Intervals** (`/ear-training-intervals`)
+  - Interval drills with preset sets, scoring, and replay controls
+  - Optional MIDI keyboard note input via Web MIDI
 
-### Installation
+## Tech stack
+
+- React 19 + TypeScript
+- Vite 7
+- TanStack Router
+- Zustand
+- Tailwind CSS 4
+- Vitest (unit tests)
+
+## Quick start
+
+### Requirements
+
+- Node.js 20+
+- `pnpm` (recommended; lockfile is `pnpm-lock.yaml`)
+- A Chromium-based browser for best Web MIDI compatibility (Chrome/Edge)
+
+### Install and run
 
 ```bash
-# Clone the repository
 git clone https://github.com/pakholeung37/midi-lab.git
-
-# Navigate to project directory
 cd midi-lab
-
-# Install dependencies
-npm install
-
-# Start development server
-npm run dev
+pnpm install
+pnpm dev
 ```
 
-## 🤝 Contributing
+Open the URL shown by Vite (usually `http://localhost:5173`).
 
-Contributions are welcome! Please feel free to submit a Pull Request. For major changes, please open an issue first to discuss what you would like to change.
+## Available scripts
 
-1. Fork the Project
-2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the Branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
+```bash
+pnpm dev        # start dev server
+pnpm build      # production build
+pnpm preview    # preview production build
+pnpm typecheck  # TypeScript check
+pnpm lint       # Biome checks
+pnpm vitest     # run unit tests
+```
 
-## 📄 License
+## MIDI files and assets
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+The custom Vite plugin (`vite-plugin-midi-list.ts`) scans the `public/` folder and exposes MIDI files to the app through a virtual module.
 
-## 🙏 Special Thanks
+To add songs to Piano Waterfall:
 
-This project is inspired by and builds upon the work of several amazing open source projects:
+1. Put `.mid` or `.midi` files in `public/`.
+2. Restart dev server if needed (hot reload is handled for MIDI file changes).
 
-- [Cursor](https://cursor.sh/) - For the amazing AI-powered code editor that helped build this
-- [WebMIDICon](https://github.com/dtinth/WebMIDICon) - For the excellent Web MIDI controller collections
-- And all the other open source MIDI projects that paved the way
+## Project layout
+
+```text
+src/
+  core/               # shared app stores (e.g., MIDI device state)
+  features/
+    waterfall/        # waterfall player, rendering, controls
+    ear-training/     # interval training logic and UI
+  pages/
+    piano-waterfall/
+    gamepad-controller/
+    ear-training-intervals/
+  layouts/            # app shell + MIDI output selector
+  router.ts           # route definitions
+```
+
+## Browser and device notes
+
+- Web MIDI support depends on browser and OS.
+- You may need to grant MIDI permissions in browser settings.
+- If no MIDI device is connected, the app still works for visualization/training modes that do not require external output.
+
+## Contributing
+
+PRs are welcome. For large changes, open an issue first to align on scope and direction.
+
+## License
+
+MIT. See [LICENSE](./LICENSE).
