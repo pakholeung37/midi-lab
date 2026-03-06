@@ -25,6 +25,7 @@ export function ControlPanel({ playbackHook: pb }: ControlPanelProps) {
     midiData,
     playback,
     audio,
+    trackVolumes,
     metronomeVolume,
     countdown,
     metronome,
@@ -38,6 +39,7 @@ export function ControlPanel({ playbackHook: pb }: ControlPanelProps) {
     setBpm,
     toggleMute,
     setVolume,
+    setTrackVolume,
     setMetronomeVolume,
     toggleCountdown,
     toggleMetronome,
@@ -94,7 +96,10 @@ export function ControlPanel({ playbackHook: pb }: ControlPanelProps) {
           volume={audio.volume}
           metronomeVolume={metronomeVolume}
           isMuted={audio.isMuted}
+          tracks={midiData?.tracks || []}
+          trackVolumes={trackVolumes}
           onVolumeChange={setVolume}
+          onTrackVolumeChange={setTrackVolume}
           onMetronomeVolumeChange={setMetronomeVolume}
           onToggleMute={toggleMute}
         />
@@ -149,7 +154,6 @@ export function ControlPanel({ playbackHook: pb }: ControlPanelProps) {
                 onFileSelect={pb.handleFileSelect}
                 onMidiSelect={pb.loadMidiFromPath}
                 selectedMidiPath={pb.selectedMidiPath}
-                tracks={midiData?.tracks || []}
                 pixelsPerSecond={pixelsPerSecond}
                 onPixelsPerSecondChange={setPixelsPerSecond}
                 transposeSemitones={transposeSemitones}

@@ -16,6 +16,8 @@ interface WaterfallState {
   }
   // 音频状态
   audio: AudioState
+  // 每个音轨独立音量（0-1）
+  trackVolumes: Record<number, number>
   // 节拍器音量（独立于 MIDI 音量）
   metronomeVolume: number
   // 倒数状态
@@ -70,6 +72,7 @@ interface WaterfallActions {
   // 音频控制
   toggleMute: () => void
   setVolume: (volume: number) => void
+  setTrackVolume: (trackIndex: number, volume: number) => void
   setMetronomeVolume: (volume: number) => void
   // 倒数控制
   toggleCountdown: () => void
@@ -104,6 +107,7 @@ interface WaterfallActions {
 // 需要持久化的状态（用户偏好设置）
 interface PersistedState {
   audio: AudioState
+  trackVolumes: Record<number, number>
   metronomeVolume: number
   pixelsPerSecond: number
   transposeSemitones: number
@@ -139,6 +143,7 @@ const initialState: WaterfallState = {
     isMuted: false,
     volume: 0.5,
   },
+  trackVolumes: {},
   metronomeVolume: 0.5,
   countdown: {
     enabled: true,
@@ -173,13 +178,25 @@ export const useWaterfallStore = create<
       ...initialState,
 
       setMidiData: (data) =>
-        set({
-          midiData: data,
-          playback: {
-            isPlaying: false,
-            bpm: data?.originalBpm || 120,
-            originalBpm: data?.originalBpm || 120,
-          },
+        set((state) => {
+          const trackVolumes: Record<number, number> = {}
+          for (const track of data?.tracks || []) {
+            const previousVolume = state.trackVolumes[track.index]
+            trackVolumes[track.index] =
+              typeof previousVolume === 'number'
+                ? Math.max(0, Math.min(1, previousVolume))
+                : 1
+          }
+
+          return {
+            midiData: data,
+            playback: {
+              isPlaying: false,
+              bpm: data?.originalBpm || 120,
+              originalBpm: data?.originalBpm || 120,
+            },
+            trackVolumes,
+          }
         }),
 
       setSelectedMidiPath: (path) => set({ selectedMidiPath: path }),
@@ -224,6 +241,14 @@ export const useWaterfallStore = create<
           audio: { ...state.audio, volume: Math.max(0, Math.min(1, volume)) },
         })),
 
+      setTrackVolume: (trackIndex, volume) =>
+        set((state) => ({
+          trackVolumes: {
+            ...state.trackVolumes,
+            [trackIndex]: Math.max(0, Math.min(1, volume)),
+          },
+        })),
+
       setMetronomeVolume: (volume) =>
         set({ metronomeVolume: Math.max(0, Math.min(1, volume)) }),
 
@@ -266,7 +291,9 @@ export const useWaterfallStore = create<
         set({ pixelsPerSecond: Math.max(5, Math.min(500, value)) }),
 
       setTransposeSemitones: (value) =>
-        set({ transposeSemitones: Math.max(-24, Math.min(24, Math.round(value))) }),
+        set({
+          transposeSemitones: Math.max(-24, Math.min(24, Math.round(value))),
+        }),
 
       setHorizontalScale: (value) =>
         set({ horizontalScale: Math.max(0.2, Math.min(3, value)) }),
@@ -301,6 +328,7 @@ export const useWaterfallStore = create<
       name: 'waterfall-store',
       partialize: (state) => ({
         audio: state.audio,
+        trackVolumes: state.trackVolumes,
         metronomeVolume: state.metronomeVolume,
         pixelsPerSecond: state.pixelsPerSecond,
         transposeSemitones: state.transposeSemitones,

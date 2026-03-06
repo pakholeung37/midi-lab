@@ -25,7 +25,10 @@ export interface MasterVolumeControlProps {
   volume: number
   metronomeVolume: number
   isMuted: boolean
+  tracks: TrackInfo[]
+  trackVolumes: Record<number, number>
   onVolumeChange: (volume: number) => void
+  onTrackVolumeChange: (trackIndex: number, volume: number) => void
   onMetronomeVolumeChange: (volume: number) => void
   onToggleMute: () => void
 }
@@ -38,7 +41,6 @@ export interface SettingsPanelProps {
   onFileSelect?: (file: File) => void
   onMidiSelect?: (path: string) => void
   selectedMidiPath?: string | null
-  tracks: TrackInfo[]
   pixelsPerSecond: number
   onPixelsPerSecondChange: (value: number) => void
   transposeSemitones: number
@@ -53,6 +55,8 @@ export interface SettingsPanelProps {
 
 export interface TrackListProps {
   tracks: TrackInfo[]
+  trackVolumes: Record<number, number>
+  onTrackVolumeChange: (trackIndex: number, volume: number) => void
 }
 
 export interface VolumeControlProps {

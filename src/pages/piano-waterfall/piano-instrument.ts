@@ -101,21 +101,33 @@ export function calculatePianoInstrument(
     ) {
       // 八度线（在每个 C 音位置）
       const cNotes = [24, 36, 48, 60, 72, 84, 96]
+      const focusCMidi = 60 // C4
 
-      ctx.strokeStyle = 'rgba(255,255,255,0.03)'
+      // 普通八度线
+      ctx.strokeStyle = 'rgba(255,255,255,0.1)'
       ctx.lineWidth = 1
       ctx.beginPath()
-
       for (const midi of cNotes) {
+        if (midi === focusCMidi) continue
         const key = keyMap.get(midi)
-        if (key) {
-          const x = key.x
-          ctx.moveTo(x, 0)
-          ctx.lineTo(x, waterfallHeight)
-        }
+        if (!key) continue
+        const x = key.x + 0.5 // 避免 1px 线条抗锯齿发虚
+        ctx.moveTo(x, 0)
+        ctx.lineTo(x, waterfallHeight)
       }
-
       ctx.stroke()
+
+      // 中音 C 参考线（更显眼）
+      const focusKey = keyMap.get(focusCMidi)
+      if (focusKey) {
+        const x = focusKey.x + 0.5
+        ctx.strokeStyle = 'rgba(255,255,255,0.24)'
+        ctx.lineWidth = 1
+        ctx.beginPath()
+        ctx.moveTo(x, 0)
+        ctx.lineTo(x, waterfallHeight)
+        ctx.stroke()
+      }
     },
   }
 }

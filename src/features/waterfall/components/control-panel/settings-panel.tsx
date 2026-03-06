@@ -8,7 +8,6 @@ import {
   MdZoomOut,
 } from 'react-icons/md'
 import { Button } from './button'
-import { TrackList } from './track-list'
 import type { SettingsPanelProps } from './types'
 import { THEMES } from '../../utils/themes'
 import { midiFiles } from 'virtual:midi-list'
@@ -21,7 +20,6 @@ export function SettingsPanelContent({
   onFileSelect,
   onMidiSelect,
   selectedMidiPath,
-  tracks,
   pixelsPerSecond,
   onPixelsPerSecondChange,
   transposeSemitones,
@@ -141,7 +139,10 @@ export function SettingsPanelContent({
             `}
             title="Reset to zero"
           >
-            {transposeSemitones > 0 ? `+${transposeSemitones}` : transposeSemitones} st
+            {transposeSemitones > 0
+              ? `+${transposeSemitones}`
+              : transposeSemitones}{' '}
+            st
           </button>
         </div>
         <div className="grid grid-cols-5 gap-1">
@@ -303,9 +304,6 @@ export function SettingsPanelContent({
       >
         {isFullscreen ? 'Exit Fullscreen' : 'Enter Fullscreen'}
       </Button>
-
-      {/* Track list */}
-      <TrackList tracks={tracks} />
     </div>
   )
 }

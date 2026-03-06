@@ -97,6 +97,8 @@ export function PianoWaterfallPage() {
           }
           break
         case 'KeyS':
+        case 'Escape':
+        case 'MediaStop':
           e.preventDefault()
           playbackHook.handleStop()
           break
@@ -260,7 +262,7 @@ export function PianoWaterfallPage() {
               </li>
               <li className="flex items-center justify-between">
                 <span className="px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 font-mono">
-                  S
+                  S / Esc
                 </span>
                 <span className="text-slate-500">Stop and rewind</span>
               </li>

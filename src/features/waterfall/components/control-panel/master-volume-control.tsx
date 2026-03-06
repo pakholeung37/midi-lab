@@ -2,12 +2,16 @@ import { MdVolumeOff, MdVolumeUp } from 'react-icons/md'
 import * as Popover from '@radix-ui/react-popover'
 import * as Slider from '@radix-ui/react-slider'
 import type { MasterVolumeControlProps } from './types'
+import { TrackList } from './track-list'
 
 export function MasterVolumeControl({
   volume,
   metronomeVolume,
   isMuted,
+  tracks,
+  trackVolumes,
   onVolumeChange,
+  onTrackVolumeChange,
   onMetronomeVolumeChange,
   onToggleMute,
 }: MasterVolumeControlProps) {
@@ -36,7 +40,7 @@ export function MasterVolumeControl({
 
       <Popover.Portal>
         <Popover.Content
-          className="p-3 rounded-xl bg-slate-900/95 backdrop-blur-md border border-slate-700/50 shadow-xl z-50 min-w-[180px] space-y-3"
+          className="p-3 rounded-xl bg-slate-900/95 backdrop-blur-md border border-slate-700/50 shadow-xl z-50 min-w-[240px] max-w-[280px] space-y-3"
           sideOffset={8}
         >
           <div>
@@ -109,6 +113,12 @@ export function MasterVolumeControl({
               <span>100%</span>
             </div>
           </div>
+
+          <TrackList
+            tracks={tracks}
+            trackVolumes={trackVolumes}
+            onTrackVolumeChange={onTrackVolumeChange}
+          />
 
           <Popover.Arrow className="fill-slate-800" />
         </Popover.Content>

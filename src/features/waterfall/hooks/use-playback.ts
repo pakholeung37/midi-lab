@@ -29,6 +29,7 @@ export function usePlayback() {
     midiData,
     playback: storePlayback,
     audio,
+    trackVolumes,
     metronomeVolume,
     countdown,
     metronome,
@@ -279,8 +280,10 @@ export function usePlayback() {
             source: 'waterfall',
             color: nextNote.color,
           })
-          if (!isMuted) {
-            playNote(transposedMidi, nextNote.velocity)
+          const trackVolume = trackVolumes[nextNote.trackIndex] ?? 1
+          const effectiveVelocity = nextNote.velocity * trackVolume
+          if (!isMuted && effectiveVelocity > 0) {
+            playNote(transposedMidi, effectiveVelocity)
           }
         }
       }
@@ -301,12 +304,21 @@ export function usePlayback() {
           source: 'waterfall',
           color: note.color,
         })
-        if (!isMuted) {
-          playNote(transposedMidi, note.velocity)
+        const trackVolume = trackVolumes[note.trackIndex] ?? 1
+        const effectiveVelocity = note.velocity * trackVolume
+        if (!isMuted && effectiveVelocity > 0) {
+          playNote(transposedMidi, effectiveVelocity)
         }
       }
     },
-    [midiData, audio.isMuted, transposeSemitones, playNote, stopNote],
+    [
+      midiData,
+      audio.isMuted,
+      trackVolumes,
+      transposeSemitones,
+      playNote,
+      stopNote,
+    ],
   )
 
   // 节拍器：检测跨越节拍点并播放 click

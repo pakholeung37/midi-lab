@@ -138,8 +138,8 @@ export function WaterfallCanvas({
 
       // 批量绘制强拍线
       if (strong.length > 0) {
-        ctx.strokeStyle = 'rgba(255,255,255,0.4)'
-        ctx.lineWidth = 1.5
+        ctx.strokeStyle = 'rgba(255,255,255,0.24)'
+        ctx.lineWidth = 1
         ctx.beginPath()
         for (const { y } of strong) {
           ctx.moveTo(0, y)
@@ -149,7 +149,7 @@ export function WaterfallCanvas({
 
         // 绘制小节号
         ctx.font = '10px monospace'
-        ctx.fillStyle = 'rgba(255,255,255,0.5)'
+        ctx.fillStyle = 'rgba(255,255,255,0.36)'
         ctx.textAlign = 'left'
         ctx.textBaseline = 'bottom'
         for (const { y, measure } of strong) {
