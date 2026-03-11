@@ -2,6 +2,13 @@ import { useCallback, useRef, useEffect } from 'react'
 import { SplendidGrandPiano } from 'smplr'
 
 type PianoStopFn = (time?: number) => void
+type IdleHandle = number
+
+interface EnsureContextOptions {
+  resumeIfSuspended?: boolean
+}
+
+interface InitPianoOptions extends EnsureContextOptions {}
 
 interface AudioContextRef {
   ctx: AudioContext | null
@@ -54,55 +61,124 @@ export function useAudio(): UseAudioReturn {
   const metronomeVolumeRef = useRef<number>(0.5)
 
   // 初始化音频上下文（用户交互后）
-  const ensureContext = useCallback(() => {
-    if (!audioRef.current.ctx) {
-      audioRef.current.ctx = new (
-        window.AudioContext ||
-        // @ts-ignore
-        window.webkitAudioContext
-      )()
-    }
-    if (audioRef.current.ctx.state === 'suspended') {
-      audioRef.current.ctx.resume()
-    }
-    return audioRef.current.ctx
-  }, [])
+  const ensureContext = useCallback(
+    ({ resumeIfSuspended = true }: EnsureContextOptions = {}) => {
+      const audioWindow = window as typeof window & {
+        webkitAudioContext?: typeof AudioContext
+      }
 
-  const initPiano = useCallback(() => {
-    const ctx = ensureContext()
-    if (!ctx) return
-    if (audioRef.current.piano || audioRef.current.pianoLoadPromise) return
+      if (!audioRef.current.ctx) {
+        const AudioContextCtor =
+          window.AudioContext || audioWindow.webkitAudioContext
+        if (!AudioContextCtor) {
+          return null
+        }
+        audioRef.current.ctx = new AudioContextCtor()
+      }
 
-    try {
-      const piano = new SplendidGrandPiano(ctx, {
-        volume: toPianoVolume(midiVolumeRef.current),
+      const ctx = audioRef.current.ctx
+      if (!ctx) {
+        return null
+      }
+
+      if (resumeIfSuspended && ctx.state === 'suspended') {
+        ctx.resume().catch((err) => {
+          console.warn('Failed to resume audio context:', err)
+        })
+      }
+
+      return ctx
+    },
+    [],
+  )
+
+  const initPiano = useCallback(
+    ({ resumeIfSuspended = true }: InitPianoOptions = {}) => {
+      const ctx = ensureContext({ resumeIfSuspended })
+      if (!ctx) return
+      if (audioRef.current.piano || audioRef.current.pianoLoadPromise) return
+
+      try {
+        const piano = new SplendidGrandPiano(ctx, {
+          volume: toPianoVolume(midiVolumeRef.current),
+        })
+        audioRef.current.piano = piano
+        audioRef.current.pianoLoadPromise = piano.load
+          .then(() => {
+            audioRef.current.pianoReady = true
+            piano.output.setVolume(toPianoVolume(midiVolumeRef.current))
+          })
+          .catch((err) => {
+            console.error(
+              'Failed to load smplr piano, fallback to oscillator:',
+              err,
+            )
+            audioRef.current.piano = null
+            audioRef.current.pianoReady = false
+          })
+          .finally(() => {
+            audioRef.current.pianoLoadPromise = null
+          })
+      } catch (err) {
+        console.error(
+          'Failed to initialize smplr piano, fallback to oscillator:',
+          err,
+        )
+        audioRef.current.piano = null
+        audioRef.current.pianoReady = false
+      }
+    },
+    [ensureContext],
+  )
+
+  // 挂载后尽早启动采样加载，避免首次发音时才请求样本。
+  useEffect(() => {
+    const idleWindow = window as typeof window & {
+      requestIdleCallback?: (
+        callback: IdleRequestCallback,
+        options?: IdleRequestOptions,
+      ) => IdleHandle
+      cancelIdleCallback?: (handle: IdleHandle) => void
+    }
+
+    const preloadPiano = () => {
+      initPiano({ resumeIfSuspended: false })
+    }
+
+    let timeoutId: number | null = null
+    let idleHandle: IdleHandle | null = null
+
+    if (idleWindow.requestIdleCallback) {
+      idleHandle = idleWindow.requestIdleCallback(preloadPiano, {
+        timeout: 300,
       })
-      audioRef.current.piano = piano
-      audioRef.current.pianoLoadPromise = piano.load
-        .then(() => {
-          audioRef.current.pianoReady = true
-          piano.output.setVolume(toPianoVolume(midiVolumeRef.current))
-        })
-        .catch((err) => {
-          console.error(
-            'Failed to load smplr piano, fallback to oscillator:',
-            err,
-          )
-          audioRef.current.piano = null
-          audioRef.current.pianoReady = false
-        })
-        .finally(() => {
-          audioRef.current.pianoLoadPromise = null
-        })
-    } catch (err) {
-      console.error(
-        'Failed to initialize smplr piano, fallback to oscillator:',
-        err,
-      )
-      audioRef.current.piano = null
-      audioRef.current.pianoReady = false
+    } else {
+      timeoutId = window.setTimeout(preloadPiano, 120)
     }
-  }, [ensureContext])
+
+    const activateAudio = () => {
+      initPiano({ resumeIfSuspended: true })
+      window.removeEventListener('pointerdown', activateAudio)
+      window.removeEventListener('keydown', activateAudio)
+      window.removeEventListener('touchstart', activateAudio)
+    }
+
+    window.addEventListener('pointerdown', activateAudio, { passive: true })
+    window.addEventListener('keydown', activateAudio)
+    window.addEventListener('touchstart', activateAudio, { passive: true })
+
+    return () => {
+      if (timeoutId !== null) {
+        window.clearTimeout(timeoutId)
+      }
+      if (idleHandle !== null && idleWindow.cancelIdleCallback) {
+        idleWindow.cancelIdleCallback(idleHandle)
+      }
+      window.removeEventListener('pointerdown', activateAudio)
+      window.removeEventListener('keydown', activateAudio)
+      window.removeEventListener('touchstart', activateAudio)
+    }
+  }, [initPiano])
 
   const playFallbackNote = useCallback(
     (ctx: AudioContext, midi: number, velocity: number) => {

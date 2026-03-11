@@ -101,14 +101,14 @@ export function calculatePianoInstrument(
     ) {
       // 八度线（在每个 C 音位置）
       const cNotes = [24, 36, 48, 60, 72, 84, 96]
-      const focusCMidi = 60 // C4
+      const emphasizedCNotes = new Set([48, 60, 72]) // C3, C4, C5
 
       // 普通八度线
       ctx.strokeStyle = 'rgba(255,255,255,0.1)'
       ctx.lineWidth = 1
       ctx.beginPath()
       for (const midi of cNotes) {
-        if (midi === focusCMidi) continue
+        if (emphasizedCNotes.has(midi)) continue
         const key = keyMap.get(midi)
         if (!key) continue
         const x = key.x + 0.5 // 避免 1px 线条抗锯齿发虚
@@ -117,17 +117,21 @@ export function calculatePianoInstrument(
       }
       ctx.stroke()
 
-      // 中音 C 参考线（更显眼）
-      const focusKey = keyMap.get(focusCMidi)
-      if (focusKey) {
-        const x = focusKey.x + 0.5
-        ctx.strokeStyle = 'rgba(255,255,255,0.24)'
-        ctx.lineWidth = 1
-        ctx.beginPath()
+      // 中音区八度线（更显眼，但不加粗）
+      ctx.strokeStyle = 'rgba(255,255,255,0.42)'
+      ctx.shadowColor = 'rgba(255,255,255,0.2)'
+      ctx.shadowBlur = 6
+      ctx.lineWidth = 1
+      ctx.beginPath()
+      for (const midi of emphasizedCNotes) {
+        const key = keyMap.get(midi)
+        if (!key) continue
+        const x = key.x + 0.5
         ctx.moveTo(x, 0)
         ctx.lineTo(x, waterfallHeight)
-        ctx.stroke()
       }
+      ctx.stroke()
+      ctx.shadowBlur = 0
     },
   }
 }
