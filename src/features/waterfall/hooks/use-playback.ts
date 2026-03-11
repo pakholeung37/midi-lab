@@ -11,6 +11,10 @@ import { useAudio } from './use-audio'
 import { useAnimationFrame, PRIORITY } from './use-animation-frame'
 import type { TimeSignature, WaterfallNote } from '../types'
 import { transposeMidi } from '../utils/midi-transpose'
+import {
+  getBeatDurationSeconds,
+  getMeasureDurationSeconds,
+} from '../utils/rhythm'
 
 const PIXELS_PER_SECOND = 150
 
@@ -172,9 +176,7 @@ export function usePlayback() {
     }
     const bpm = midiData.originalBpm || 120
     const ts = midiData.timeSignatures[0]
-    const beatsPerMeasure = ts.numerator
-    const beatDuration = 60 / bpm
-    const measureDuration = beatDuration * beatsPerMeasure
+    const measureDuration = getMeasureDurationSeconds(bpm, ts)
 
     const startTime = (loop.startMeasure - 1) * measureDuration
     const endTime = Math.min(
@@ -330,7 +332,6 @@ export function usePlayback() {
     ) => {
       // 使用原始 BPM 计算节拍（与节拍网格一致）
       const bpm = midiData?.originalBpm || 120
-      const beatDuration = 60 / bpm
 
       // 获取当前拍号
       let ts = timeSignatures[0]
@@ -341,6 +342,7 @@ export function usePlayback() {
         }
       }
       const beatsPerMeasure = ts?.numerator || 4
+      const beatDuration = getBeatDurationSeconds(bpm, ts?.denominator || 4)
 
       // 计算上一帧和当前帧的节拍索引
       const prevBeatIndex = Math.floor(prevTime / beatDuration)
@@ -468,9 +470,7 @@ export function usePlayback() {
       }
       const bpm = midiData.originalBpm || 120
       const ts = midiData.timeSignatures[0]
-      const beatsPerMeasure = ts.numerator
-      const beatDuration = 60 / bpm
-      const measureDuration = beatDuration * beatsPerMeasure
+      const measureDuration = getMeasureDurationSeconds(bpm, ts)
 
       const startTime = (startMeasure - 1) * measureDuration
       const endTime = endMeasure * measureDuration
@@ -487,9 +487,7 @@ export function usePlayback() {
     }
     const bpm = midiData.originalBpm || 120
     const ts = midiData.timeSignatures[0]
-    const beatsPerMeasure = ts.numerator
-    const beatDuration = 60 / bpm
-    const measureDuration = beatDuration * beatsPerMeasure
+    const measureDuration = getMeasureDurationSeconds(bpm, ts)
 
     return Math.ceil(midiData.duration / measureDuration)
   }, [midiData])
@@ -501,9 +499,7 @@ export function usePlayback() {
     }
     const bpm = midiData.originalBpm || 120
     const ts = midiData.timeSignatures[0]
-    const beatsPerMeasure = ts.numerator
-    const beatDuration = 60 / bpm
-    return beatDuration * beatsPerMeasure
+    return getMeasureDurationSeconds(bpm, ts)
   }, [midiData])
 
   // 按小节步进

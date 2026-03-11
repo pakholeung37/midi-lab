@@ -1,6 +1,7 @@
 // 节拍网格计算工具
 
 import type { TimeSignature } from '../types'
+import { getBeatDurationSeconds, getMeasureDurationSeconds } from './rhythm'
 
 // 节拍信息
 export interface BeatInfo {
@@ -55,8 +56,6 @@ export function getBeatsInRange(
   const beats: BeatInfo[] = []
 
   // 每拍的时长（秒）
-  const beatDuration = 60 / bpm
-
   // 获取当前时间点的拍号
   const getTimeSignatureAt = (time: number): TimeSignature => {
     for (let i = timeSignatures.length - 1; i >= 0; i--) {
@@ -71,9 +70,10 @@ export function getBeatsInRange(
   // 简化处理：假设从 0 开始，拍号不变（后续可扩展支持拍号变化）
   const ts = getTimeSignatureAt(startTime)
   const beatsPerMeasure = ts.numerator
+  const beatDuration = getBeatDurationSeconds(bpm, ts.denominator)
 
   // 每小节的时长
-  const measureDuration = beatDuration * beatsPerMeasure
+  const measureDuration = getMeasureDurationSeconds(bpm, ts)
 
   // 找到 startTime 之前最近的小节开始时间
   const measureIndex = Math.floor(startTime / measureDuration)
